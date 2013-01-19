@@ -207,15 +207,21 @@ void osg_geom::osgAddObjectNode(osg::ref_ptr<osgShadow::ShadowedScene> shadowedS
 	osgObject->setObjTransformArray(pTransArray);
 }
 
-void osg_geom::osg_createHand(int index, float x, float y, float world_scale, float ratio) 
+void osg_geom::CreateVirtualHand(boost::shared_ptr<osg_Object> osgObject, int index, float x, float y, float world_scale, float ratio) 
 {
 //	float sphere_size = 0.5;
 	float sphere_size = world_scale * ratio;
-	cout << "Sphere size = " << world_scale*ratio << endl;
 	//float sphere_size = world_scale; // test
+	const int SPHERE_SCALE = ARMM::ConstParams::SPHERE_SCALE;
 
 	printf("Hand%d Created : ws=%f, ratio=%f\n", index, world_scale, ratio);
-	hand_object_global_array.push_back(new osg::PositionAttitudeTransform());
+
+	//create temporary osg contents from osgObject
+	std::vector<osg::ref_ptr<osg::PositionAttitudeTransform> > pHandObjGlobalArray	= osgObject->getHandObjectGlobalArray();
+	std::vector<osg::ref_ptr<osg::ShapeDrawable> >pHandObjShapeArray				= osgObject->getHandObjectShapeArray();
+
+	pHandObjGlobalArray.push_back(new osg::PositionAttitudeTransform());
+
 	for(int i = 0; i < MIN_HAND_PIX; i++) 
 	{
 		for(int j = 0; j < MIN_HAND_PIX; j++) 
@@ -226,23 +232,27 @@ void osg_geom::osg_createHand(int index, float x, float y, float world_scale, fl
 			shape->getOrCreateStateSet()->setMode(GL_BLEND, osg::StateAttribute::ON);
 			shape->setColor(osg::Vec4(1, 1, 0, 1));
 			osg::ref_ptr< osg::Geode> geode = new osg::Geode();
-			hand_object_shape_array.push_back(shape.get());
+			pHandObjShapeArray.push_back(shape.get()); //<--- register
 			geode->addDrawable( shape.get() );
 
-			hand_object_transform_array[index].push_back(new osg::PositionAttitudeTransform());
-			int curr = hand_object_transform_array[index].size()-1;
-			hand_object_transform_array[index].at(curr)->setScale(osg::Vec3d(SPHERE_SCALE,SPHERE_SCALE,SPHERE_SCALE));
-			hand_object_transform_array[index].at(curr)->setPosition(osg::Vec3d(j*SPHERE_SCALE, i*SPHERE_SCALE, 1000));
-			hand_object_transform_array[index].at(curr)->addChild( geode.get() );
-			hand_object_transform_array[index].at(curr)->setNodeMask(rcvShadowMask);
-			hand_object_global_array.at(index)->addChild( hand_object_transform_array[index].at(curr));
+			osgObject->hand_object_transform_array[index].push_back(new osg::PositionAttitudeTransform());
+
+			int curr = osgObject->hand_object_transform_array[index].size()-1;
+			osgObject->hand_object_transform_array[index].at(curr)->setScale(osg::Vec3d(SPHERE_SCALE,SPHERE_SCALE,SPHERE_SCALE));
+			osgObject->hand_object_transform_array[index].at(curr)->setPosition(osg::Vec3d(j*SPHERE_SCALE, i*SPHERE_SCALE, 1000));
+			osgObject->hand_object_transform_array[index].at(curr)->addChild( geode.get() );
+			osgObject->hand_object_transform_array[index].at(curr)->setNodeMask(rcvShadowMask);
+
+			pHandObjGlobalArray.at(index)->addChild( osgObject->hand_object_transform_array[index].at(curr));
 		}
 	}
 
-	hand_object_global_array.at(index)->setPosition(osg::Vec3d(0,0,0));
-	mShadowedScene->addChild( hand_object_global_array.at(index) );
+	pHandObjGlobalArray.at(index)->setPosition(osg::Vec3d(0,0,0));
 
 	//set rendering order
-	hand_object_global_array.at(index)->getOrCreateStateSet()->setRenderBinDetails(2, "RenderBin");
-	mShadowedScene->getOrCreateStateSet()->setRenderBinDetails(2, "RenderBin");
+	pHandObjGlobalArray.at(index)->getOrCreateStateSet()->setRenderBinDetails(2, "RenderBin");
+
+	//write back to tmp variables
+	osgObject->setHandObjectGlobalArray(pHandObjGlobalArray);
+	osgObject->setHandObjectShapeArray(pHandObjShapeArray);
 }

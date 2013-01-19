@@ -51,16 +51,6 @@ float TrimeshScale = 1;
 
 const int SPHERE_SCALE = 10;
 
-namespace
-{
-	template< class T>
-	bool VectorBoundChecker(std::vector<T> v, int idx)
-	{
-		return( v.size() > idx && idx >= 0);
-	}
-}
-
-
 class ARTrackedNode : public osg::Group 
 {
 
@@ -180,17 +170,16 @@ public:
 class osg_Object;
 class osg_Init;
 class osg_geom;
+class osg_Update;
 class osg_Root
 {
 public:
 	
-	ARMM::osg_Menu * osgMenu;
+	ARMM::osg_Menu * mOsgMenu;
 	boost::shared_ptr<osg_Object> mOsgObject;
 	osg::ref_ptr<ARTrackedNode> arTrackedNode; 
 
 	int celicaIndex;
-
-	std::vector <int> fingerIndex;
 
 private:
 	osgViewer::Viewer mViewer;
@@ -199,6 +188,7 @@ private:
 
 	boost::shared_ptr<osg_Init> mOsgInit;
 	boost::shared_ptr<osg_geom> mOsgGeom;
+	boost::shared_ptr<osg_Update> mOsgUpdater;
 
 	//Background image
 	IplImage	*mGLImage;
@@ -206,29 +196,34 @@ private:
 
 	double	mAddModelAnimation;
 	bool	mAddArModel;
-	int		mOsgArInputButton;
 	int		mOsgArAddModelIndex;
 
 public:
 	osg_Root();
 	~osg_Root();
 
+	//init parameter
 	void osg_init(double *projMatrix);
 	void osg_uninit();
-
 	void osg_inittracker(std::string markerName, int maxLengthSize, int maxLengthScale);
 
+	//update rendering window
 	void osg_render(IplImage *newFrame, osg::Quat *q,osg::Vec3d  *v, osg::Quat wq[][4], osg::Vec3d wv[][4], CvMat *cParams, CvMat *cDistort, std::vector <osg::Quat> q_array, std::vector<osg::Vec3d>  v_array);
 
+	//set ground parameter
 	void osg_UpdateHeightfieldTrimesh(float *ground_grid);
 	void setOSGTrimeshScale(float scale);
-
 	void ShowGroundGeometry();
 	void HideGroundGeometry();
 
+	//add a new object to osg scene
+	void osgAddObjectNode(osg::Node* node);
+
+	//control virtual visual hand
 	void osg_createHand(int index, float x, float y, float world_scale, float ratio);
 	void osg_UpdateHand(int index, float *x, float *y, float *grid);
 
+	//control AR menu
 	void OsgInitMenu();
 	void OsgInitModelMenu();
 	void ModelButtonInput();
@@ -239,17 +234,15 @@ public:
 	bool IsModelButtonVisibiilty();
 	void ModelButtonAnimation();
 	void ResetModelButtonPos();
+	void SetAddArModel(const bool & b);
+	void SetARAddModelButtton(const int & input);
+	int  GetARModelButton(void) const;
 
 	//add function for AR input
 	osg::Vec3 GetARMenuPos(); 
 	int	 AddNewObjFromARButton(const int & index);
 
-	void SetAddArModel(const bool & b);
-	void SetARInputButton(const int & input);
-	int  GetARInputButton(void) const;
-	void SetARAddModelButtton(const int & input);
-	int  GetARModelButton(void) const;
-
+	
 	bool isAddArModel() const {
 		return mAddArModel;
 	}
@@ -274,18 +267,11 @@ public:
 		mOsgArAddModelIndex = osgArAddModelIndex;
 	}
 
-	int getOsgArInputButton() const {
-		return mOsgArInputButton;
-	}
-
-	void setOsgArInputButton(int osgArInputButton) {
-		mOsgArInputButton = osgArInputButton;
-	}
-
-	void ResetAddModelMode();
+	void ResetArModelButtonType();
 	void ResetPanelCond();
 
 private:
+	void ResetAddModelMode();
 	osg::Drawable* createSquare(const osg::Vec3& corner,const osg::Vec3& width,const osg::Vec3& height, osg::Image* image=NULL);
 	osg::Drawable* createAxis(const osg::Vec3& corner,const osg::Vec3& xdir,const osg::Vec3& ydir,const osg::Vec3& zdir);
 	osg::Node* createMilestone();

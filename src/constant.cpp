@@ -35,4 +35,6 @@ namespace ARMM
 	//for virtual objects
 	const int ConstParams::MAX_NUM_VIR_OBJ = 5;
 
+	//for virtual hands
+	const int ConstParams::SPHERE_SCALE = 10;
 }

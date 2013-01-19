@@ -28,10 +28,6 @@ public:
 	void SetObjTransformArrayIndex( const int & idx, osg::Quat quat, osg::Vec3d vec);
 	void PushObjNodeArray(osg::Node* n){ obj_node_array.push_back(n); }
 	osg::ref_ptr<osg::Node> GetObjNodeIndex(const int & idx) const;
-	std::vector<osg::ref_ptr<osg::Node>> getObjNodeArray() const {
-		return obj_node_array;
-	}
-
 	int SizeObjNodeArray(void) const ;
 	int SizeObjTransformArray(void) const;
 
@@ -45,19 +41,6 @@ public:
 
 	int getObjectIndex() const {
 		return objectIndex;
-	}
-
-	void setObjNodeArray(std::vector<osg::ref_ptr<osg::Node>> objNodeArray) {
-		obj_node_array = objNodeArray;
-	}
-
-	std::vector<osg::ref_ptr<osg::PositionAttitudeTransform>> getObjTransformArray() const {
-		return obj_transform_array;
-	}
-
-	void setObjTransformArray(
-			std::vector<osg::ref_ptr<osg::PositionAttitudeTransform>> objTransformArray) {
-		obj_transform_array = objTransformArray;
 	}
 
 	osg::ref_ptr<osg::PositionAttitudeTransform> getObjTexturePosAtt() const {
@@ -77,14 +60,6 @@ public:
 		this->objTexture = objTexture;
 	}
 
-	bool isSoftTexture() const {
-		return softTexture;
-	}
-
-	void setSoftTexture(bool softTexture) {
-		this->softTexture = softTexture;
-	}
-
 	void SetScale2ObjTrans(const int & index, const float & scale);
 	void SetMask2ObjTrans(const int & index, short mask);
 
@@ -95,6 +70,68 @@ public:
 	void DecrementObjIndex(void){ objectIndex--; }
 
 	void osg_resetNodes();
+
+	//------------------------------------------------------
+	//setter and getter for virtual objects----->
+	//------------------------------------------------------
+	std::vector<osg::ref_ptr<osg::Node>> getObjNodeArray() const {
+		return obj_node_array;
+	}
+
+	void setObjNodeArray(std::vector<osg::ref_ptr<osg::Node>> objNodeArray) {
+		obj_node_array = objNodeArray;
+	}
+
+	std::vector<osg::ref_ptr<osg::PositionAttitudeTransform>> getObjTransformArray() const {
+		return obj_transform_array;
+	}
+
+	void setObjTransformArray(
+			std::vector<osg::ref_ptr<osg::PositionAttitudeTransform>> objTransformArray) {
+		obj_transform_array = objTransformArray;
+	}
+
+	//------------------------------------------------------
+	//setter and getter for soft texture----->
+	//------------------------------------------------------
+	bool isSoftTexture() const {
+		return softTexture;
+	}
+
+	void setSoftTexture(bool softTexture) {
+		this->softTexture = softTexture;
+	}
+
+	//------------------------------------------------------
+	//setter and getter for hand objects----->
+	//------------------------------------------------------
+	std::vector<osg::ref_ptr<osg::Node> > getHandObjectArray() const {
+		return hand_object_array;
+	}
+
+	void setHandObjectArray(
+			std::vector<osg::ref_ptr<osg::Node> > handObjectArray) {
+		hand_object_array = handObjectArray;
+	}
+
+	std::vector<osg::ref_ptr<osg::PositionAttitudeTransform> > getHandObjectGlobalArray() const {
+		return hand_object_global_array;
+	}
+
+	void setHandObjectGlobalArray(
+			std::vector<osg::ref_ptr<osg::PositionAttitudeTransform> > handObjectGlobalArray) {
+		hand_object_global_array = handObjectGlobalArray;
+	}
+
+	std::vector<osg::ref_ptr<osg::ShapeDrawable> > getHandObjectShapeArray() const {
+		return hand_object_shape_array;
+	}
+
+	void setHandObjectShapeArray(
+			std::vector<osg::ref_ptr<osg::ShapeDrawable> > handObjectShapeArray) {
+		hand_object_shape_array = handObjectShapeArray;
+	}
+
 public:
 
 	//HeightField
@@ -111,6 +148,9 @@ public:
 	std::vector<osg::PositionAttitudeTransform*> wheel_transform[NUM_CARS];
 #endif
 
+	//TODO this variable should be private
+	std::vector<osg::ref_ptr<osg::PositionAttitudeTransform>> hand_object_transform_array[MAX_NUM_HANDS];
+
 private:
 	//osg_root‚©‚çˆÚ“®-->//
 	//for virtual objects
@@ -119,10 +159,8 @@ private:
 
 	std::vector<osg::ref_ptr<osg::Node>> hand_object_array;
 
-
-	std::vector<osg::PositionAttitudeTransform*> hand_object_global_array;
-	std::vector<osg::PositionAttitudeTransform*> hand_object_transform_array[MAX_NUM_HANDS];
-	std::vector<osg::ShapeDrawable*> hand_object_shape_array;
+	std::vector<osg::ref_ptr<osg::PositionAttitudeTransform>> hand_object_global_array;
+	std::vector<osg::ref_ptr<osg::ShapeDrawable>> hand_object_shape_array;
 	//<--osg_root‚©‚çˆÚ“®//
 
 	//for virtual objects

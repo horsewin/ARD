@@ -37,6 +37,9 @@ extern float WORLD_ORIGIN_X;
 extern float WORLD_ORIGIN_Y;
 extern CvMat *kinectTransform;
 
+//for AR input button
+extern int gOsgArInputButton;
+
 double x = 0, y=0, z=0;
 bool WIREFRAME_MODE = false;
 
@@ -111,7 +114,7 @@ int KeyboardController::check_input(boost::shared_ptr<osg_Root> osgRoot)
 		if(WIREFRAME_MODE) 
 		{
 			osgRoot->ShowGroundGeometry();
-		} 
+		}
 		else 
 		{
 			osgRoot->HideGroundGeometry();
@@ -129,7 +132,7 @@ int KeyboardController::check_input(boost::shared_ptr<osg_Root> osgRoot)
 		}
 		if (getKey(77)) { //M
 			//interact_state = PINCH;
-			osgArInputButton = 203;
+			gOsgArInputButton = 203;
 			return 203;
 		}
 		if (getKey(79)) { //o

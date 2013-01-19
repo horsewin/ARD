@@ -13,6 +13,7 @@
 #include "Rendering\osg_Object.h"
 #include "Rendering\osg_Init.h"
 #include "Rendering\osg_geom_data.h"
+#include "Rendering\osg_Update.h"
 #include "constant.h"
 
 #include <osgShadow/ShadowMap>
@@ -30,20 +31,27 @@ const osg::Quat DEFAULTATTIDUTE =
 //---------------------------------------------------------------------------
 // Global
 //---------------------------------------------------------------------------
-vector<int> objVectorDeletable;
 vector<int> fingersIdx;
+vector<int> fingerIndex;
 
 extern bool panelCollisionLock;
 extern panelinput panelInput;
+extern int gOsgArInputButton;
 
-
+namespace
+{
+	template< class T>
+	bool VectorBoundChecker(std::vector<T> v, int idx)
+	{
+		return( v.size() > idx && idx >= 0);
+	}
+}
 //---------------------------------------------------------------------------
 // Code
 //---------------------------------------------------------------------------
 osg_Root::osg_Root()
 {
 	mAddModelAnimation	= 0.0;
-	mOsgArInputButton	= -1;
 	mOsgArAddModelIndex	= -1;
 
 	//Create Height field
@@ -52,15 +60,15 @@ osg_Root::osg_Root()
 
 osg_Root::~osg_Root()
 {
-	fingerIndex.clear();
 	osg_uninit();
 }
 
 void osg_Root::osg_init(double *projMatrix) 
 {
-	//
-	mOsgInit = boost::shared_ptr<osg_Init>( new osg_Init());
-	mOsgGeom = boost::shared_ptr<osg_geom>( new osg_geom());
+	//child objects of this root1
+	mOsgInit	= boost::shared_ptr<osg_Init>( new osg_Init());
+	mOsgGeom	= boost::shared_ptr<osg_geom>( new osg_geom());
+	mOsgUpdater = boost::shared_ptr<osg_Update>( new osg_Update());
 
 	//
 	mVideoImage = new osg::Image();
@@ -84,9 +92,16 @@ void osg_Root::osg_init(double *projMatrix)
 	bgCamera->setClearMask(GL_DEPTH_BUFFER_BIT);
 	bgCamera->getOrCreateStateSet()->setMode(GL_LIGHTING, GL_TRUE);
 	bgCamera->getOrCreateStateSet()->setMode(GL_DEPTH_TEST, GL_FALSE);
-	bgCamera->setProjectionMatrixAsOrtho2D(0, WINDOW_WIDTH, 0, WINDOW_HEIGHT);
+	bgCamera->setProjectionMatrixAsOrtho2D(0, ARMM::ConstParams::WINDOW_WIDTH, 0, ARMM::ConstParams::WINDOW_HEIGHT);
 	
-	osg::ref_ptr<osg::Geometry> geom = osg::createTexturedQuadGeometry(osg::Vec3(0, 0, 0), osg::X_AXIS * WINDOW_WIDTH, osg::Y_AXIS * WINDOW_HEIGHT, 0, 1, 1, 0);
+	osg::ref_ptr<osg::Geometry> geom = osg::createTexturedQuadGeometry(
+		osg::Vec3(0, 0, 0), 
+		osg::X_AXIS * ARMM::ConstParams::WINDOW_WIDTH, 
+		osg::Y_AXIS * ARMM::ConstParams::WINDOW_HEIGHT, 
+		0, 
+		1, 
+		1, 
+		0);
 	geom->getOrCreateStateSet()->setTextureAttributeAndModes(0, new osg::Texture2D(mVideoImage));
 	
 	osg::ref_ptr<osg::Geode> geode = new osg::Geode();
@@ -106,10 +121,15 @@ void osg_Root::osg_init(double *projMatrix)
 
 	arTrackedNode = new ARTrackedNode();
 	fgCamera->addChild(arTrackedNode);
+
+	//for input
+	gOsgArInputButton	= -1;
+
 };
 
 void osg_Root::osg_uninit() 
 {
+	fingerIndex.clear();
 	arTrackedNode->stop();
 	cvReleaseImage(&mGLImage);
 }
@@ -217,7 +237,7 @@ void osg_Root::osg_inittracker(string markerName, int maxLengthSize, int maxLeng
 
 	//Create OSG Menu
 #if USE_OSGMENU==1
-	osgMenu = new ARMM::osg_Menu();
+	mOsgMenu = new ARMM::osg_Menu();
 	OsgInitMenu();
 	OsgInitModelMenu();
 #endif
@@ -305,6 +325,20 @@ void osg_Root::HideGroundGeometry()
 	mOsgObject->mGroundLineColor->push_back(osg::Vec4(1,1,1,0.0));
 }
 
+void osg_Root::osgAddObjectNode(osg::Node* node)
+{
+	mOsgGeom->osgAddObjectNode(mShadowedScene, mOsgObject, node);
+}
+
+//for hand object
+void osg_Root::osg_createHand(int index, float x, float y, float world_scale, float ratio)
+{
+	mOsgGeom->CreateVirtualHand(mOsgObject, index, x, y, world_scale, ratio);
+
+	//set the created hand as a child to osg scene
+	mShadowedScene->addChild( mOsgObject->getHandObjectGlobalArray().at(index) );
+}
+
 void osg_Root::osg_UpdateHeightfieldTrimesh(float *ground_grid)
 {
 	int index =0;
@@ -322,84 +356,17 @@ void osg_Root::osg_UpdateHeightfieldTrimesh(float *ground_grid)
 	mOsgObject->mHeightFieldGeometry_line->dirtyDisplayList();
 }
 
-//void osg_UpdateHand(int index, float x, float y, float *grid) {
-void osg_Root::osg_UpdateHand(int index, float *x, float *y, float *grid) 
+void osg_Root::osg_UpdateHand(int index, float* x, float* y, float* grid) 
 {
-	const int DEPTH_SCALE = 10; // to convert cm to mm scale
-
-	if(!VectorBoundChecker(hand_object_global_array, index)) return;
-
-	//ëñç∏ï˚å¸ÇÕKinect viewÇ©ÇÁÇ›ÇΩÇ∆Ç´ÇÃtop-leftÇ©ÇÁtop-rightÇ…å¸Ç©Ç§
-	for(int i = 0; i < MIN_HAND_PIX; i++) 
-	{
-		//ëñç∏ï˚å¸ÇÕKinect viewÇ©ÇÁÇ›ÇΩÇ∆Ç´ÇÃbottom-leftÇ©ÇÁtop-leftÇ…å¸Ç©Ç§
-		for(int j = 0; j < MIN_HAND_PIX; j++) 
-		{
-			int curr = i*MIN_HAND_PIX+j;
-			//osg::Vec3d pos = hand_object_transform_array[index].at(curr)->getPosition();
-			if(grid[curr] > 0 && grid[curr]<100 )
-			{
-				hand_object_transform_array[index].at(curr)->setPosition(osg::Vec3d(x[curr]*SPHERE_SCALE, y[curr]*SPHERE_SCALE, grid[curr]*DEPTH_SCALE));
-
-				//printf("Pos, sensor %d = %f, %f, %f\n", curr, x[curr], y[curr], grid[curr]);
-				hand_object_shape_array[curr]->setColor(osg::Vec4(0.9451, 0.7333, 0.5765, 1));
-			}
-			else
-			{
-				hand_object_transform_array[index].at(curr)->setPosition(osg::Vec3d(x[curr]*SPHERE_SCALE, y[curr]*SPHERE_SCALE, -5000*DEPTH_SCALE));
-				//hand_object_transform_array[index].at(curr)->setPosition(osg::Vec3d(pos.x(), pos.y(), 100*SPHERE_SCALE));
-//				if(voxel[index] < 0)
-//					world_sphere_transform_array.at(index)->setStateSet(
-//				else
-//					s->setAllChildrenOn();
-			//if(curr%10 == 0)
-			//	printf("Pos, sensor %d = %f, %f, %f\n", curr, x[curr], y[curr], grid[curr]);
-			}
-		}
-	}
-
-	//assign fingertips
-	fingersIdx.clear();
-	REP(fingerTips,fingerIndex.size())
-	{
-		int idx =	fingerIndex.at(fingerTips);
-
-		//if(grid[idx] > 0 && grid[idx]<100){}
-		//else
-		{
-			bool fitting = false;
-			int shift = 1;
-			do{
-				int tmpIdx;
-				for(int i=-shift; i<=shift; i++)
-				{
-					for(int j=-shift; j<=shift; j++)
-					{
-						tmpIdx = idx + (i*MIN_HAND_PIX+j);
-						if(tmpIdx < 0 || tmpIdx >= HAND_GRID_SIZE) continue;
-						if(grid[tmpIdx] > 0 && grid[tmpIdx]<100)
-						{
-							fingersIdx.push_back(tmpIdx);
-							//fitting = true;
-							hand_object_shape_array[tmpIdx]->setColor(osg::Vec4(1, 0, 0, 1));
-						}
-					}
-					//if(fitting) break;
-				}
-				shift++;
-			//}while(!fitting || shift<=2);
-			}while(shift<=2);
-		}
-	}
-
+	mOsgUpdater->UpdateHand(mOsgObject, index, x, y, grid);
 }
 
 void osg_Root::OsgInitMenu()
 {
-	osgMenu->CreateMenuPane();
+	mOsgMenu->CreateMenuPane();
 
 	std::vector<osg::ref_ptr<osg::PositionAttitudeTransform> > pTransArray = 
-		osgMenu->getObjMenuTransformArray();
+		mOsgMenu->getObjMenuTransformArray();
 
 	//add menu object into the AR scene
 	osg::ref_ptr<osg::Group> menu = new osg::Group;
@@ -423,14 +390,14 @@ void osg_Root::OsgInitMenu()
 
 	mShadowedScene->addChild(menuTrans.get());
 
-	osgMenu->setObjMenuTransformArray(pTransArray);
+	mOsgMenu->setObjMenuTransformArray(pTransArray);
 }
 
 void osg_Root::OsgInitModelMenu()
 {
-	osgMenu->CreateModelButtonCloud();
+	mOsgMenu->CreateModelButtonCloud();
 
-	std::vector< osg::ref_ptr<osg::PositionAttitudeTransform> > pTransArray = osgMenu->getMenuModelTransArray();
+	std::vector< osg::ref_ptr<osg::PositionAttitudeTransform> > pTransArray = mOsgMenu->getMenuModelTransArray();
 	//add menu object into the AR scene
 	osg::ref_ptr<osg::Group> menu = new osg::Group;
 	REP(idx, pTransArray.size())
@@ -452,7 +419,7 @@ void osg_Root::OsgInitModelMenu()
 
 	mShadowedScene->addChild(menuTrans.get());
 
-	osgMenu->setMenuModelTransArray(pTransArray);
+	mOsgMenu->setMenuModelTransArray(pTransArray);
 }
 
 void osg_Root::ModelButtonInput()
@@ -466,15 +433,13 @@ void osg_Root::ModelButtonInput()
 	ToggleMenuVisibility();
 	ToggleVirtualObjVisibility();
 
-	//add menu object into the AR scene
-
 	//play some effect
 	PlaySound(_T("machine_call.wav"), NULL, SND_ASYNC);	
 }
 
 void osg_Root::ToggleMenuVisibility()
 {
-	std::vector< osg::ref_ptr<osg::PositionAttitudeTransform> > pMenuTransArray  = osgMenu->getObjMenuTransformArray();
+	std::vector< osg::ref_ptr<osg::PositionAttitudeTransform> > pMenuTransArray  = mOsgMenu->getObjMenuTransformArray();
 
 	double shiftVal = 4;
 	REP(idx, pMenuTransArray.size())
@@ -495,13 +460,13 @@ void osg_Root::ToggleMenuVisibility()
 		}
 	}
 
-	osgMenu->setObjMenuTransformArray(pMenuTransArray);
-	osgMenu->ToggleMenuButtonState();
+	mOsgMenu->setObjMenuTransformArray(pMenuTransArray);
+	mOsgMenu->ToggleMenuButtonState();
 }
 
 void osg_Root::ToggleModelButtonVisibility()
 {
-	std::vector< osg::ref_ptr<osg::PositionAttitudeTransform> > pModelTransArray = osgMenu->getMenuModelTransArray();
+	std::vector< osg::ref_ptr<osg::PositionAttitudeTransform> > pModelTransArray = mOsgMenu->getMenuModelTransArray();
 
 	if(pModelTransArray.empty()) return;
 
@@ -513,32 +478,38 @@ void osg_Root::ToggleModelButtonVisibility()
 		pModelTransArray.at(idx)->setNodeMask(nodeMask);
 	}
 
-	osgMenu->setMenuModelTransArray(pModelTransArray);
-	osgMenu->ToggleModelButtonState();
+	mOsgMenu->setMenuModelTransArray(pModelTransArray);
+	mOsgMenu->ToggleModelButtonState();
 }
 
 void osg_Root::ToggleVirtualObjVisibility()
 {
-	REP(i,obj_transform_array.size())
+	//create a temporary object from osgObject
+	std::vector< osg::ref_ptr<osg::PositionAttitudeTransform> > pTransArray = mOsgObject->getObjTransformArray();
+
+	REP(i,pTransArray.size())
 	{
-		unsigned int mask = obj_transform_array.at(i)->getNodeMask() ^ (castShadowMask);
-		obj_transform_array.at(i)->setNodeMask(mask);
+		unsigned int mask = pTransArray.at(i)->getNodeMask() ^ (castShadowMask);
+		pTransArray.at(i)->setNodeMask(mask);
 	}
+
+	//write back to the original object
+	mOsgObject->setObjTransformArray(pTransArray);
 }
 
 bool osg_Root::IsMenuVisibiilty()
 {
-	return osgMenu->isMenuButtonState();
+	return mOsgMenu->isMenuButtonState();
 }
 
 bool osg_Root::IsModelButtonVisibiilty()
 {
-	return osgMenu->isModelButtonState();
+	return mOsgMenu->isModelButtonState();
 }
 
 void osg_Root::ModelButtonAnimation()
 {
-	std::vector< osg::ref_ptr<osg::PositionAttitudeTransform> > pModelTransArray = osgMenu->getMenuModelTransArray();
+	std::vector< osg::ref_ptr<osg::PositionAttitudeTransform> > pModelTransArray = mOsgMenu->getMenuModelTransArray();
 
 	//check if valid models are found?
 	if(pModelTransArray.empty())
@@ -568,7 +539,7 @@ void osg_Root::ModelButtonAnimation()
 
 void osg_Root::ResetModelButtonPos()
 {
-	std::vector< osg::ref_ptr<osg::PositionAttitudeTransform> > pModelTransArray = osgMenu->getMenuModelTransArray();
+	std::vector< osg::ref_ptr<osg::PositionAttitudeTransform> > pModelTransArray = mOsgMenu->getMenuModelTransArray();
 
 	if(pModelTransArray.empty())
 	{
@@ -579,7 +550,7 @@ void osg_Root::ResetModelButtonPos()
 	REP(idx, pModelTransArray.size())
 	{
 		osg::Vec3 newPos = pModelTransArray.at(idx)->getPosition();
-		newPos.set(newPos.x(), newPos.y(), osgMenu->GetInitPosZ());
+		newPos.set(newPos.x(), newPos.y(), mOsgMenu->GetInitPosZ());
 		pModelTransArray.at(idx)->setPosition(newPos);		
 	}
 
@@ -593,14 +564,14 @@ osg::Vec3 osg_Root::GetARMenuPos()
 
 int osg_Root::AddNewObjFromARButton(const int & index)
 {
-	osg::Vec3 pos(osgMenu->getMenuModelTransArray().at(mOsgArAddModelIndex)->getPosition());
+	osg::Vec3 pos(mOsgMenu->getMenuModelTransArray().at(mOsgArAddModelIndex)->getPosition());
 
-	int val = osgMenu->GetKeyAssignment(static_cast<unsigned int>(mOsgArAddModelIndex));
+	int val = mOsgMenu->GetKeyAssignment(static_cast<unsigned int>(mOsgArAddModelIndex));
 
 	//create model unit with osg::Node
 	osg::ref_ptr<osg::Node> node = dynamic_cast<osg::Node*>
 	(
-		osgMenu->getMenuModelObjectArray().at(mOsgArAddModelIndex)->clone(osg::CopyOp::SHALLOW_COPY)
+		mOsgMenu->getMenuModelObjectArray().at(mOsgArAddModelIndex)->clone(osg::CopyOp::SHALLOW_COPY)
 	);
 
 	//register a new model as an osg unit to osg world
@@ -615,27 +586,34 @@ int osg_Root::AddNewObjFromARButton(const int & index)
 
 
 void osg_Root::SetAddArModel(const bool & b){ mAddArModel = b; }
-void osg_Root::SetARInputButton(const int & input){ mOsgArInputButton = input; }
-int  osg_Root::GetARInputButton(void) const { return mOsgArInputButton; }
-void osg_Root::SetARAddModelButtton(const int & input){ mOsgArAddModelButton = input; }
-int  osg_Root::GetARModelButton(void) const { return mOsgArAddModelButton;}
+//void osg_Root::SetARAddModelButtton(const int & input){ mOsgArAddModelButton = input; }
+//int  osg_Root::GetARModelButton(void) const { return mOsgArAddModelButton;}
 
-void osg_Root::ResetAddModelMode()
+void osg_Root::ResetArModelButtonType()
 {
-	mAddArModel = false; //pOsgRoot->SetAddArModel(false);
-	mOsgArAddModelIndex = -1;
-	ResetModelButtonPos();
+	ToggleMenuVisibility();
+	ToggleModelButtonVisibility();
+	ToggleVirtualObjVisibility();
+	ResetAddModelMode();
+	ResetPanelCond();
+	setOsgArAddModelIndex(-1);
 }
 
 void osg_Root::ResetPanelCond()
 {
 	panelCollisionLock	= false;
 	panelInput			= NOTHING;
-	mOsgArInputButton	= -1;
 }
+
 //************************************************************************************
 // Private functions
 //************************************************************************************
+void osg_Root::ResetAddModelMode()
+{
+	mAddArModel = false; //pOsgRoot->SetAddArModel(false);
+	mOsgArAddModelIndex = -1;
+	ResetModelButtonPos();
+}
 
 
 /** create quad at specified position. */

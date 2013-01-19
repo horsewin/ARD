@@ -95,7 +95,6 @@
     <ClCompile Include="..\src\Rendering\osg_Update.cpp" />
     <ClCompile Include="..\src\Skin_Col_Segment\GMM.cpp" />
     <ClCompile Include="..\src\Skin_Col_Segment\HandRegion.cpp" />
-    <ClCompile Include="..\src\Skin_Col_Segment\main.cpp" />
     <ClCompile Include="..\src\ViewingModel.cc" />
   </ItemGroup>
   <ItemGroup>

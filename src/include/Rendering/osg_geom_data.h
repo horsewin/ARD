@@ -22,8 +22,7 @@ public:
 	void osgAddObjectNode(osg::ref_ptr<osgShadow::ShadowedScene> shadowedScene, boost::shared_ptr<osg_Object> osgObject, osg::Node* n);
 
 	//hand object
-	void osg_createHand(int index, float x, float y, float world_scale, float ratio);
-
+	void CreateVirtualHand(boost::shared_ptr<osg_Object> osgObject, int index, float x, float y, float world_scale, float ratio);
 
 private:
 	osg::Vec3	asOsgVec3( const btVector3& v ) ;

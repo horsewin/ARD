@@ -68,7 +68,7 @@ btThreadSupportInterface* createSolverThreadSupport(int maxNumThreads) {
 #include "opencv/highgui.h"
 
 //for loading model
-#include "../ViewingModel.h"
+#include "ViewingModel.h"
 
 
 #include "constant.h"
@@ -132,7 +132,7 @@ extern panelinput panelInput;
 extern bool bTextureTransfer;
 
 bool bSelectModel;
-extern int osgArInputButton;
+extern int gOsgArInputButton;
 extern int osgArAddModelIndex;
 
 std::ostream& operator<<(std::ostream& out, const btVector3 & v) 
@@ -780,7 +780,7 @@ void bt_ARMM_world::Update()
   	//m_carChassis.at(0)->setCenterOfMassTransform(btTransform(btQuaternion(0,0,0,1),btVector3(pCollision[0], pCollision[1], pCollision[2])));
 	
 	setCarMovement();
-	for (int i = 0; i < NUMBER_CAR; i++) 
+	for (int i = 0; i < NUM_CARS; i++) 
 	{
 		for (int j=0; j < m_vehicle.at(i)->getNumWheels(); j++) {
 			m_vehicle.at(i)->updateWheelTransform(j,true); 
@@ -825,7 +825,7 @@ void bt_ARMM_world::Update()
 void bt_ARMM_world::setCarMovement() 
 {
 	//Drive front wheels
-	for (int i = 0; i < NUMBER_CAR; i++) {
+	for (int i = 0; i < NUM_CARS; i++) {
 		m_vehicle.at(i)->setSteeringValue(Car_Array[i].gVehicleSteering,0);
 		m_vehicle.at(i)->setBrake(Car_Array[i].gBreakingForce,0);
 		m_vehicle.at(i)->setSteeringValue(Car_Array[i].gVehicleSteering,1);
@@ -1571,7 +1571,7 @@ void bt_ARMM_world::DecideCollisionPanel()
 	{
 		if( static_cast<int>(mMenuBody.at(i)->getFriction()) == actualID)
 		{
-			osgArInputButton = actualID;
+			gOsgArInputButton = actualID;
 			actualID = -1;
 		}
 	}

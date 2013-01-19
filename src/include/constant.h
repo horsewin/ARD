@@ -38,6 +38,9 @@ namespace ARMM
 
 		//for virtual objects
 		static const int MAX_NUM_VIR_OBJ;
+
+		//for virtual hands
+		static const int SPHERE_SCALE;
 	};
 }
 #endif

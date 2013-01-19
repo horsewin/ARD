@@ -1,10 +1,8 @@
 //TODO オブジェクトロスト後の処理がおかしいので修正の必要あり
 
-#define UPDATE_TRIMESH 1
-#define SIM_FREQUENCY 10
-#define SHOWSEGMENTATION 1
-#define SHOWKINECTIMG 0
-
+//---------------------------------------------------------------------------
+// Includes
+//---------------------------------------------------------------------------
 #include "main.h"
 #include <windows.h>
 #pragma comment(lib, "winmm.lib")
@@ -29,6 +27,8 @@
 //Graphics calls
 #include "Rendering\osg_Root.h"
 #include "Rendering\osg_Object.h"
+#include "ARMM\Rendering\osg_Menu.h"
+#include "Rendering\osg_geom_data.h"
 
 #include "leastsquaresquat.h"
 
@@ -56,15 +56,33 @@
 #include "UserConstant.h"
 #include "constant.h"
 
+//---------------------------------------------------------------------------
+// Constant/Define
+//---------------------------------------------------------------------------
+using namespace std; 
+using namespace xn;
+
+#define UPDATE_TRIMESH 1
+#define SIM_FREQUENCY 10
+#define SHOWSEGMENTATION 1
+#define SHOWKINECTIMG 0
+
 const int MAX_FPS = 100;
+
+//---------------------------------------------------------------------------
+// Global
+//---------------------------------------------------------------------------
+int	gOsgArInputButton;
+vector<int> objVectorDeletable;
+
+extern vector<int> fingerIndex;
 
 extern int collide[2];
 extern btVector3 pCollision;
 extern int collisionInd;
 extern interaction interact_state;
 
-using namespace std; 
-using namespace xn;
+
 
 bt_ARMM_world *m_world;
 boost::shared_ptr<osg_Root> pOsgRoot;
@@ -235,6 +253,10 @@ namespace{
 	}
 }
 
+//---------------------------------------------------------------------------
+// Code
+//---------------------------------------------------------------------------
+
 inline CvMat* scaleParams(CvMat *cParams, double scaleFactor) 
 {
 	CvMat *sParams = cvCloneMat(cParams);
@@ -287,7 +309,7 @@ int main(int argc, char* argv[])
 	RegistrationParams = scaleParams(capture->getParameters(), double(REGISTRATION_SIZE.width)/double(CAPTURE_SIZE.width));
 
 	//init parameter for rendering
-	osg_init(calcProjection(RegistrationParams, capture->getDistortion(), REGISTRATION_SIZE));
+	pOsgRoot->osg_init(calcProjection(RegistrationParams, capture->getDistortion(), REGISTRATION_SIZE));
 
 	//for Kinect view
 	loadKinectParams(KINECT_PARAMS_FILENAME, &kinectParams, &kinectDistort);
@@ -427,7 +449,7 @@ int main(int argc, char* argv[])
 				TransformImage(depthIm, transDepth160, MARKER_DEPTH, MESH_SIZE, true);
 				GenerateTrimeshGroundFromDepth(transDepth160, MARKER_DEPTH); /*Trimesh generation*/
 				m_world->updateTrimeshRefitTree(ground_grid);//opencl?
-				osg_UpdateHeightfieldTrimesh(ground_grid);//opencl?
+				pOsgRoot->osg_UpdateHeightfieldTrimesh(ground_grid);//opencl?
 
 				//TickCountAverageEnd();
 #endif
@@ -530,8 +552,10 @@ void RenderScene(IplImage *arImage, Capture *capture)
 {
 	float scale = 10;
 	osg::Vec3d worldVec;
+
 #if CAR_SIMULATION == 1
-	for(int i = 0; i < NUM_CARS; i++) {
+	for(int i = 0; i < NUM_CARS; i++) 
+	{
 		//get cars position and orientation
 		btTransform trans = m_world->getCarPose(i);
 		btQuaternion quat = trans.getRotation();
@@ -549,8 +573,10 @@ void RenderScene(IplImage *arImage, Capture *capture)
 
 	std::vector <osg::Quat> quat_obj_array;
 	std::vector <osg::Vec3d> vect_obj_array;
-	
+
+	//set the number of objects in the AR environment
 	const int num_of_objects = pOsgRoot->mOsgObject->getVirtualObjectsCount();
+
 	if(num_of_objects > 0) 
 	{
 		if(!objVectorDeletable.empty())
@@ -569,8 +595,7 @@ void RenderScene(IplImage *arImage, Capture *capture)
 
 			//TODO 別の場所で生成するように書き換え
 			//add soft texture object into the environment
-			osgAddObjectNode(m_world->CreateSoftTexture("Data/tex.bmp"));
-			cout << "create the soft body object" << endl;
+			pOsgRoot->osgAddObjectNode(m_world->CreateSoftTexture("Data/tex.bmp"));
 		}
 
 		for(int i = 0; i < num_of_objects; i++) 
@@ -590,16 +615,16 @@ void RenderScene(IplImage *arImage, Capture *capture)
 			//}
 		}
 #if CAR_SIMULATION == 1
-		osg_render(arImage, CarsOrientation, CarsPosition, WheelsOrientaion, WheelsPosition, RegistrationParams, capture->getDistortion(), quat_obj_array, vect_obj_array);
+		pOsgRoot->osg_render(arImage, CarsOrientation, CarsPosition, WheelsOrientaion, WheelsPosition, RegistrationParams, capture->getDistortion(), quat_obj_array, vect_obj_array);
 #else 
-		osg_render(arImage, NULL, NULL, NULL, NULL, RegistrationParams, capture->getDistortion(), quat_obj_array, vect_obj_array);
+		pOsgRoot->osg_render(arImage, NULL, NULL, NULL, NULL, RegistrationParams, capture->getDistortion(), quat_obj_array, vect_obj_array);
 #endif /* CAR_SIMULATION == 1 */
 	} 
 
 	else // Virtual_Objects_Count <= 0
 	{
 #if CAR_SIMULATION == 1
-		osg_render(arImage, CarsOrientation, CarsPosition, WheelsOrientaion, WheelsPosition, RegistrationParams, capture->getDistortion(), quat_obj_array, vect_obj_array);
+		pOsgRoot->osg_render(arImage, CarsOrientation, CarsPosition, WheelsOrientaion, WheelsPosition, RegistrationParams, capture->getDistortion(), quat_obj_array, vect_obj_array);
 #else 
 		osg_render(arImage, NULL, NULL, NULL, NULL, RegistrationParams, capture->getDistortion(), quat_obj_array, vect_obj_array);
 #endif /* CAR_SIMULATION == 1 */
@@ -650,11 +675,11 @@ void loadKinectTransform(char *filename)
 		if (niContext.WaitAnyUpdateAll() == XN_STATUS_OK) 
 		{
 			//Load in the marker for registration
-			osg_inittracker(MARKER_FILENAME, 400, markerSize.width);
+			pOsgRoot->osg_inittracker(MARKER_FILENAME, 400, markerSize.width);
 
 			m_world->setWorldDepth(MARKER_DEPTH);
 			m_world->setWorldScale(WORLD_SCALE);
-			setOSGTrimeshScale(WORLD_SCALE);
+			pOsgRoot->setOSGTrimeshScale(WORLD_SCALE);
 
 			g_depth.GetMetaData(niDepthMD);
 			inpaintDepth(&niDepthMD, true);
@@ -829,7 +854,7 @@ void registerMarker()
 	if (calcKinectOpenGLTransform(colourIm, depthIm, &kinectTransform)) 
 	{
 		//Load in the marker for registration
-		osg_inittracker(MARKER_FILENAME, 400, markerSize.width);	
+		pOsgRoot->osg_inittracker(MARKER_FILENAME, 400, markerSize.width);	
 		printf("Makerker Size = %d\n", markerSize.width);
 		//Set OSG Menu
 
@@ -844,7 +869,7 @@ void registerMarker()
 
 		m_world->setWorldDepth(MARKER_DEPTH);
 		m_world->setWorldScale(WORLD_SCALE);
-		setOSGTrimeshScale(WORLD_SCALE);
+		pOsgRoot->setOSGTrimeshScale(WORLD_SCALE);
 		setWorldOrigin();
 		transDepth160 = cvCreateImage(cvSize(MESH_SIZE.width, MESH_SIZE.height), IPL_DEPTH_32F, 1);
 		TransformImage(depthIm, transDepth160, MARKER_DEPTH, MESH_SIZE, true);
@@ -1036,7 +1061,7 @@ void FindHands(IplImage *depthIm, IplImage *colourIm)
 	DetectFingertips(grey_640, fingerTips);
 
 	// init fingertips
-	pOsgRoot->fingerIndex.clear();
+	fingerIndex.clear();
 
 	//draw fingertips
 	const float diffX = abs(upperLeft.x - bottomRight.x)/MIN_HAND_PIX;
@@ -1064,7 +1089,7 @@ void FindHands(IplImage *depthIm, IplImage *colourIm)
 				&&  abs(fingerTips[i][j].y-tmpFingertips.y) <= 2)
 				{
 					//OSGで関連付けているIndexの走査方向によってIndexは定まる
-					pOsgRoot->fingerIndex.push_back( dx*MIN_HAND_PIX + (MIN_HAND_PIX-1)-dy);
+					fingerIndex.push_back( dx*MIN_HAND_PIX + (MIN_HAND_PIX-1)-dy);
 				}
 			}
 #ifdef SHOWSEGMENTATION
@@ -1209,7 +1234,7 @@ int CreateHand(int lower_left_corn_X, int lower_left_corn_Y)
 
 	ratio = curr_hands_ratio[0];
 	m_world->createHand( lower_left_corn_X, lower_left_corn_Y, MIN_HAND_PIX, ratio);	
-	osg_createHand(index, lower_left_corn_X, lower_left_corn_Y, WORLD_SCALE, ratio);
+	pOsgRoot->osg_createHand(index, lower_left_corn_X, lower_left_corn_Y, WORLD_SCALE, ratio);
 	return index; //return the index of current hand
 }
 
@@ -1219,7 +1244,7 @@ void UpdateAllHands()
 	{
 		//In this case, spheres are displayed on the bottom-left corner of the marker
 		m_world->updateHandDepth(i, curr_hands_corners[i].x, curr_hands_corners[i].y, ratio, hand_depth_grids[i]);
-		osg_UpdateHand(i, m_world->debugHandX(i), m_world->debugHandY(i), m_world->debugHandZ(i));
+		pOsgRoot->osg_UpdateHand(i, m_world->debugHandX(i), m_world->debugHandY(i), m_world->debugHandZ(i));
 	}
 
 }
@@ -1265,8 +1290,8 @@ void DeleteVirtualObject(const int & index)
 #if USE_OSGMENU == 1
 void AssignPhysics2Osgmenu()
 {
-	m_world->CreateMenu(osgMenu);
-	m_world->CreateModelButton(osgMenu);
+	m_world->CreateMenu(pOsgRoot->mOsgMenu);
+	m_world->CreateModelButton(pOsgRoot->mOsgMenu);
 }
 
 void ResetTextureTransferMode()
@@ -1276,24 +1301,23 @@ void ResetTextureTransferMode()
 
 void CheckerArInput()
 {
-	if(osgArInputButton > 0)
+	if(gOsgArInputButton > 0)
 	{
-		string buttonStr = osgMenu->getObjMenuNodeArray().at(osgArInputButton)->getName(); 
+		string buttonStr = pOsgRoot->mOsgMenu->getObjMenuNodeArray().at(gOsgArInputButton)->getName(); 
 
 		//set transmitted key input to client nodes
 		//TODO : implementation network part
-		input_key = kc->TransmitInput(osgArInputButton);
+		input_key = kc->TransmitInput(gOsgArInputButton);
 
 		//change panelInput state
 		if(buttonStr.find("model.3ds") != string::npos)	//MODE: Add model
 		{
 			panelInput = ADDARMODEL;
-			ModelButtonInput();
+			pOsgRoot->ModelButtonInput();
 		}
 		else if(buttonStr.find("reset.3ds") != string::npos)	//MODE: Reset virtual models
 		{
-			pOsgRoot->mOsgObject
-			osg_resetNodes();
+			pOsgRoot->mOsgObject->osg_resetNodes();
 			ResetPanelCond();
 		}
 		else if(buttonStr.find("Transfer") != string::npos)	//MODE: Texture Transfer
@@ -1301,7 +1325,7 @@ void CheckerArInput()
 			if(m_world->m_objectsBody.size() < 2)
 			{
 				cerr << "No enough model is found : need two at least" << endl;
-				ResetPanelCond();
+				pOsgRoot->ResetPanelCond();
 
 				//play some effect
 				PlaySound(_T("jump02.wav"), NULL, SND_ASYNC);	
@@ -1318,7 +1342,7 @@ void CheckerArInput()
 		cout << buttonStr.c_str() << endl;
 
 		//reset
-		osgArInputButton = -1;		
+		gOsgArInputButton = -1;		
 	}
 }
 
@@ -1326,7 +1350,7 @@ int CheckerArModelButtonType()
 {
 	if(pOsgRoot->getOsgArAddModelIndex() > 0)
 	{
-		string touchStr = pOsgRoot->osgMenu->getMenuModelObjectArray().at(pOsgRoot->getOsgArAddModelIndex())->getName();
+		string touchStr = pOsgRoot->mOsgMenu->getMenuModelObjectArray().at(pOsgRoot->getOsgArAddModelIndex())->getName();
 		cout << touchStr.c_str() << endl;
 
 		int val = 0;
@@ -1353,13 +1377,9 @@ int CheckerArModelButtonType()
 		}
 
 		//reset
-		pOsgRoot->ToggleMenuVisibility();
-		pOsgRoot->ToggleModelButtonVisibility();
-		pOsgRoot->ToggleVirtualObjVisibility();
-		pOsgRoot->ResetAddModelMode();
-		pOsgRoot->ResetPanelCond();
+		pOsgRoot->ResetArModelButtonType();
+		gOsgArInputButton = -1;		
 		m_world->ResetARButtonInput();
-		pOsgRoot->setOsgArAddModelIndex(-1);
 	}
 
 	return 0;

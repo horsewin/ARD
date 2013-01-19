@@ -60,9 +60,6 @@
     <ClCompile Include="..\src\Skin_Col_Segment\HandRegion.cpp">
       <Filter>Skin_Col_Segment</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Skin_Col_Segment\main.cpp">
-      <Filter>Skin_Col_Segment</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\constant.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
