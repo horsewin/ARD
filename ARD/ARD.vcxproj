@@ -1,0 +1,127 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{1CEE9D31-1098-473F-870B-5261B809EB8C}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>ARD</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\Frontier2\Documents\research\ARD\src\include;$(Boost_DIR)/include;$(LIB3DS)\src;$(OPENCV_2_1)\include\opencv;$(OPENCV_2_1)\include;$(ARMM)\src\Skin_Col_Segment;$(VRPN);$(OPIRA)\include;$(OPEN_NI_INCLUDE);$(OSG)\include;$(BULLET_INCLUDE_DIR);$(OSGBULLET_INCLUDE_DIR);$(OSGWORKS_INCLUDE_DIR);$(ARMM);$(ARMM_NHI_SHARED_INC_DIR);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>lib;$(LIB3DS)\Debug;$(OPENCV_2_1)\lib;$(OPIRA)\lib;$(OPEN_NI_LIB);$(OSG)\lib;$(OSGBULLET_LIBRARIES_DIR);$(OSGWORKS_LIBRARIES);$(BULLET_LIBRARIES_DIR)\Debug;$(VRPN)\build\Debug</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Opengl32.lib;lib3ds-2_0.lib;cv210d.lib;cvaux210d.lib;cxcore210d.lib;ml210d.lib;cxts210.lib;highgui210d.lib;opencv_ffmpeg210d.lib;openNI.lib;opiralibrary_d.lib;ocvsurf_d.lib;videoinputd.lib;opiralibrarymt_d.lib;osgd.lib;osgutild.lib;osggad.lib;osgviewerd.lib;osgtextd.lib;osgdbd.lib;osgShadowd.lib;openthreadsd.lib;BulletCollision.lib;BulletDynamics.lib;ConvexDecomposition.lib;BulletSoftBody.lib;LinearMath.lib;OpenGLSupport.lib;vrpn.lib;osgbCollision.lib;osgbDynamics.lib;osgbInteraction.lib;osgwControlsd.lib;osgwQueryd.lib;osgwToolsd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\Frontier2\Documents\research\ARD\src\include;$(Boost_DIR)/include;$(LIB3DS)\src;$(OPENCV_2_1)\include\opencv;$(OPENCV_2_1)\include;$(ARMM)\src\Skin_Col_Segment;$(VRPN);$(OPIRA)\include;$(OPEN_NI_INCLUDE);$(OSG_INCLUDE_DIR);$(BULLET_INCLUDE_DIR);$(OSGBULLET_INCLUDE_DIR);$(OSGWORKS_INCLUDE_DIR);$(ARMM);$(ARMM_NHI_SHARED_INC_DIR)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>Opengl32.lib;lib3ds-2_0.lib;cv210.lib;cvaux210.lib;cxcore210.lib;ml210.lib;cxts210.lib;highgui210.lib;opencv_ffmpeg210.lib;openNI.lib;opiralibrary.lib;ocvsurf.lib;videoinput.lib;opiralibrarymt.lib;osg.lib;osgutil.lib;osgga.lib;osgviewer.lib;osgtext.lib;osgdb.lib;osgShadow.lib;openthreads.lib;BulletCollision.lib;BulletDynamics.lib;BulletSoftbody.lib;ConvexDecomposition.lib;LinearMath.lib;OpenGLSupport.lib;vrpn.lib;osgbCollision.lib;osgbDynamics.lib;osgbInteraction.lib;osgwControls.lib;osgwQuery.lib;osgwTools.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>lib;$(LIB3DS)\Release;$(OPENCV_2_1)\lib;$(OPIRA)\lib;$(OPEN_NI_LIB);$(OSG)\lib;$(OSGBULLET_LIBRARIES_DIR);$(OSGWORKS_LIBRARIES);$(BULLET_LIBRARIES_DIR)\Release;$(VRPN)\build\Release</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\constant.cpp" />
+    <ClCompile Include="..\src\Controls\ARControls.cpp" />
+    <ClCompile Include="..\src\Controls\KeyboardControls.cpp" />
+    <ClCompile Include="..\src\main.cpp" />
+    <ClCompile Include="..\src\MyShadowMap.cpp" />
+    <ClCompile Include="..\src\Network\Communicator.cpp" />
+    <ClCompile Include="..\src\Physics\bt_ARMM_hand.cpp" />
+    <ClCompile Include="..\src\Physics\bt_ARMM_world.cpp" />
+    <ClCompile Include="..\src\Rendering\osg_geom_data.cpp" />
+    <ClCompile Include="..\src\Rendering\osg_Init.cpp" />
+    <ClCompile Include="..\src\Rendering\osg_Object.cpp" />
+    <ClCompile Include="..\src\Rendering\osg_Root.cpp" />
+    <ClCompile Include="..\src\Rendering\osg_Update.cpp" />
+    <ClCompile Include="..\src\Skin_Col_Segment\GMM.cpp" />
+    <ClCompile Include="..\src\Skin_Col_Segment\HandRegion.cpp" />
+    <ClCompile Include="..\src\Skin_Col_Segment\main.cpp" />
+    <ClCompile Include="..\src\ViewingModel.cc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\include\constant.h" />
+    <ClInclude Include="..\src\include\Controls\ARControls.h" />
+    <ClInclude Include="..\src\include\Controls\Controls.h" />
+    <ClInclude Include="..\src\include\Controls\KeyboardControls.h" />
+    <ClInclude Include="..\src\include\Controls\XBoxControls.h" />
+    <ClInclude Include="..\src\include\leastsquaresquat.h" />
+    <ClInclude Include="..\src\include\main.h" />
+    <ClInclude Include="..\src\include\MyShadowMap.h" />
+    <ClInclude Include="..\src\include\Network\Communicator.h" />
+    <ClInclude Include="..\src\include\Physics\bt_ARMM_hand.h" />
+    <ClInclude Include="..\src\include\Physics\bt_ARMM_world.h" />
+    <ClInclude Include="..\src\include\Rendering\osg_geom_data.h" />
+    <ClInclude Include="..\src\include\Rendering\osg_Init.h" />
+    <ClInclude Include="..\src\include\Rendering\osg_Object.h" />
+    <ClInclude Include="..\src\include\Rendering\osg_Root.h" />
+    <ClInclude Include="..\src\include\Rendering\osg_Update.h" />
+    <ClInclude Include="..\src\include\Skin_Col_Segment\GMM.h" />
+    <ClInclude Include="..\src\include\Skin_Col_Segment\HandRegion.h" />
+    <ClInclude Include="..\src\include\Transforms.h" />
+    <ClInclude Include="..\src\include\UserConstant.h" />
+    <ClInclude Include="..\src\include\ViewingModel.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
