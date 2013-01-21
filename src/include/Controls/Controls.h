@@ -4,11 +4,13 @@
 #include <boost\shared_ptr.hpp>
 
 class osg_Root;
+class bt_ARMM_world;
+
 class Controller 
 {
 	public:
 		Controller();
-		void check_input(boost::shared_ptr<osg_Root> osgRoot);
+		int check_input(boost::shared_ptr<osg_Root> osgRoot, bt_ARMM_world *world);
 };
 
 #endif

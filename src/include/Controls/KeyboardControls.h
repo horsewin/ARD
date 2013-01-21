@@ -8,13 +8,13 @@
 
 class osg_geom;
 
-class KeyboardController: public Controller 
+class KeyboardController
 {
 public:
-	KeyboardController(bt_ARMM_world *m_world);
+	KeyboardController();
 	~KeyboardController();
 
-	int check_input(boost::shared_ptr<osg_Root> osgRoot);
+	int	check_input(boost::shared_ptr<osg_Root> osgRoot, bt_ARMM_world *world);
 	int TransmitInput(const int & input);
 
 private:

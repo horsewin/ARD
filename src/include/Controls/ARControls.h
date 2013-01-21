@@ -5,15 +5,15 @@
 
 //OpenCV
 #include "opencv/cv.h"
-
-class ARController: public Controller 
-{
-public:
-	ARController(bt_ARMM_world *m_world) : Controller(m_world){};
-	int check_input(boost::shared_ptr<osg_Root> osgRoot);
-
-private:
-
-};
+//
+//class ARController: public Controller 
+//{
+//public:
+//	ARController(bt_ARMM_world *m_world) : Controller(m_world){};
+//	int check_input(boost::shared_ptr<osg_Root> osgRoot);
+//
+//private:
+//
+//};
 
 #endif

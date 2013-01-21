@@ -336,9 +336,9 @@ int main(int argc, char* argv[])
 #endif
 
 	//controls
-	kc = new KeyboardController(m_world);
+	kc = new KeyboardController();
 
-	//XboxController *xc = new XboxController(m_world);
+	//XboxController *xc = new XboxController();
 
 	loadKinectTransform(KINECT_TRANSFORM_FILENAME);
 
@@ -408,8 +408,8 @@ int main(int argc, char* argv[])
 		transDepth160 = cvCreateImage(cvSize(MESH_SIZE.width, MESH_SIZE.height), IPL_DEPTH_32F, 1);
 		transDepth320 = cvCreateImage(cvSize(ARMM::ConstParams::SKIN_X, ARMM::ConstParams::SKIN_Y), IPL_DEPTH_32F, 1);
 		transColor320 = cvCreateImage(cvSize(ARMM::ConstParams::SKIN_X, ARMM::ConstParams::SKIN_Y), IPL_DEPTH_8U, 3);
-		memcpy(depthIm->imageData, niDepthMD.Data(), depthIm->imageSize);	
-		//cvCircle(colourIm, cvPoint(marker_origin.x,marker_origin.y), 5, CV_BLUE, 3);
+		memcpy(depthIm->imageData, niDepthMD.Data(), depthIm->imageSize);
+		//cvCircle(colourIm, cvPoint(marker_origin.x,marker_origin.y), 5, CV_BLUE, 3); //for debug to show marker origin
 #ifdef SHOWKINECTIMG
 		cvShowImage("Kinect View", colourIm);
 #endif
@@ -417,7 +417,7 @@ int main(int argc, char* argv[])
 		cvWaitKey(1); 
 
 		//check input device
-		input_key = kc->check_input(pOsgRoot);
+		input_key = kc->check_input(pOsgRoot, m_world);
 		ExecuteAction(input_key);
 
 		//xc->check_input();
@@ -446,12 +446,6 @@ int main(int argc, char* argv[])
 				//TickCountAverageEnd();
 #endif
 
-#ifdef SIM_PARTICLES
-/*World spheres simulation*/
-//				GenerateVoxelFromDepth(depthIm, MARKER_DEPTH);
-//				m_world->updateWorldSphereTransform(voxel_grid);
-//				osgUpdateWorldSphereTransform(voxel_grid);
-#endif
 				counter = 0;
 			} else {
 #ifdef USE_SKIN_SEGMENTATION /*Skin color segmentation*/ // may be reduce resolution first as well as cut off depth make processing faster
@@ -855,6 +849,7 @@ void registerMarker()
 
 		//delete xc;
 		delete m_world;
+
 		m_world = new bt_ARMM_world();
 		kc = new KeyboardController();
 		//xc = new XboxController(m_world);
@@ -872,9 +867,6 @@ void registerMarker()
 		m_world->setMaxHeight(MaxHeight);
 		m_world->initPhysics();
 
-#ifdef SIM_PARTICLES
-		CreateOSGSphereProxy();//osg spheres representation
-#endif
 #ifdef SIM_MICROMACHINE
 		m_world->resetCarScene(0);
 		m_world->resetCarScene(1);
@@ -972,7 +964,7 @@ void FindHands(IplImage *depthIm, IplImage *colourIm)
 	//temporary test 1 hand
 	//----->Copy height info to grid and display
 	//				for(int i = 0; i < num_hand_in_scene; i++) {
-		IplImage* depth11		= cvCreateImage(cvSize(MIN_HAND_PIX, MIN_HAND_PIX), IPL_DEPTH_32F, 1);
+		IplImage* depth11	= cvCreateImage(cvSize(MIN_HAND_PIX, MIN_HAND_PIX), IPL_DEPTH_32F, 1);
 		IplImage* depth11_2 = cvCreateImage(cvSize(MIN_HAND_PIX, MIN_HAND_PIX), IPL_DEPTH_32F, 1);
 
 		cvSetImageROI(depthImResized, cvRect(x2, y2 ,box_size,box_size));
@@ -1031,12 +1023,6 @@ void FindHands(IplImage *depthIm, IplImage *colourIm)
 	cont_boundbox.clear();
 	cont_boundbox2D.clear();
 	cont_center.clear();
-
-	#ifdef USE_OPTICAL_FLOW
-	if(RunOnce){
-		flow_capture->Run(prev_gray, curr_gray, colourIm160);
-	}
-	#endif
 
 	IplImage* col_640 = cvCreateImage(cvSize(ARMM::ConstParams::SKIN_X, ARMM::ConstParams::SKIN_Y), IPL_DEPTH_8U, 3);
 	cvResize(colourIm160, col_640, CV_INTER_LINEAR);

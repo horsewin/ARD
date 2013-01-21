@@ -60,8 +60,7 @@ namespace
 }
 
 
-KeyboardController::KeyboardController(bt_ARMM_world *m_world) 
-	: Controller(m_world)
+KeyboardController::KeyboardController()
 {
 	mOsgGeom	= boost::shared_ptr<osg_geom>( new osg_geom());
 }
@@ -78,7 +77,7 @@ int KeyboardController::TransmitInput(const int & input)
 }
 
 
-int KeyboardController::check_input(boost::shared_ptr<osg_Root> osgRoot)
+int KeyboardController::check_input(boost::shared_ptr<osg_Root> osgRoot, bt_ARMM_world *world)
 {
 	//key offset to use key assignment info
 	const int offset = 79;

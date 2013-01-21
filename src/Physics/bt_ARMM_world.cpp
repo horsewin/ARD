@@ -536,7 +536,7 @@ bt_ARMM_world::~bt_ARMM_world(void) { //cleanup in the reverse order of creation
 		//delete collision shapes
 		for (int j=0;j<m_collisionShapes.size();j++) 
 		{
-			delete m_collisionShapes[j];
+			delete m_collisionShapes.at(j);
 		}
 		m_collisionShapes.clear();
 
