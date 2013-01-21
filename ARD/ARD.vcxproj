@@ -80,6 +80,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\Dropbox\Lab\ShareProc\ARMM\Rendering\osg_Menu.cpp" />
     <ClCompile Include="..\src\constant.cpp" />
     <ClCompile Include="..\src\Controls\ARControls.cpp" />
     <ClCompile Include="..\src\Controls\KeyboardControls.cpp" />

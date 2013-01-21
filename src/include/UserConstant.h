@@ -85,4 +85,8 @@ enum{NUM_VERTS_X = 160, NUM_VERTS_Y = 120};
 #define rcvShadowMask  0x1
 #define castShadowMask 0x2
 
+//for physics simulation
+#define FRICTION 1.0f
+#define RESTITUTION 0.0
+
 #endif

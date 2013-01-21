@@ -8,6 +8,11 @@
 
 #include <cassert>
 
+osg_Object::osg_Object()
+{
+
+}
+
 osg_Object::~osg_Object()
 {
 	obj_node_array.clear();

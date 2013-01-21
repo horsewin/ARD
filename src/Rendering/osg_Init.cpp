@@ -12,9 +12,23 @@
 
 #include <osgDB/ReadFile>
 
+#include <iostream>
+#include <cassert>
+
+osg_Init::osg_Init()
+{}
+
+osg_Init::~osg_Init()
+{}
 
 void osg_Init::CreateHeightfield(boost::shared_ptr<osg_Object> osgObject)
 {
+	if(osgObject == NULL)
+	{
+		std::cerr << "Error: No osg object is created in the stage of init!!" << std::endl;
+		exit(EXIT_SUCCESS);
+	}
+
 	osgObject->mHeightFieldPoints			= new osg::Vec3Array;
 	osgObject->mHeightFieldGeometry_quad	= new osg::Geometry;
 	osgObject->mHeightFieldGeometry_line	= new osg::Geometry;

@@ -29,11 +29,24 @@
 //---------------------------------------------------------------------------
 // Global
 //---------------------------------------------------------------------------
-extern const osg::Quat DEFAULTATTIDUTE;
+namespace{
+	const osg::Quat DEFAULTATTIDUTE = 
+		osg::Quat(
+			osg::DegreesToRadians(0.f), osg::Vec3d(1.0, 0.0, 0.0),
+			osg::DegreesToRadians(0.f), osg::Vec3d(0.0, 1.0, 0.0),
+			osg::DegreesToRadians(0.f), osg::Vec3d(0.0, 0.0, 1.0)
+		);
+}
 
 //---------------------------------------------------------------------------
 // Code
 //---------------------------------------------------------------------------
+osg_geom::osg_geom()
+{}
+
+osg_geom::~osg_geom()
+{}
+
 osg::Geode* osg_geom::create3dsModel() 
 {
 	osg::Vec3Array			*vertexArray	= new osg::Vec3Array();

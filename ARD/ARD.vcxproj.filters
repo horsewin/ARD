@@ -81,6 +81,9 @@
     <ClCompile Include="..\src\Rendering\osg_Update.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\Dropbox\Lab\ShareProc\ARMM\Rendering\osg_Menu.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\include\Controls\Controls.h">

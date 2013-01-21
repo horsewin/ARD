@@ -46,11 +46,6 @@
 
 #include <tchar.h>
 
-CvPoint2D32f center_trimesh;
-float TrimeshScale = 1;
-
-const int SPHERE_SCALE = 10;
-
 class ARTrackedNode : public osg::Group 
 {
 
@@ -196,7 +191,6 @@ private:
 
 	double	mAddModelAnimation;
 	bool	mAddArModel;
-	int		mOsgArAddModelIndex;
 
 public:
 	osg_Root();
@@ -259,19 +253,11 @@ public:
 		mAddModelAnimation = addModelAnimation;
 	}
 
-	int getOsgArAddModelIndex() const {
-		return mOsgArAddModelIndex;
-	}
-
-	void setOsgArAddModelIndex(int osgArAddModelIndex) {
-		mOsgArAddModelIndex = osgArAddModelIndex;
-	}
-
 	void ResetArModelButtonType();
 	void ResetPanelCond();
+	void ResetAddModelMode();
 
 private:
-	void ResetAddModelMode();
 	osg::Drawable* createSquare(const osg::Vec3& corner,const osg::Vec3& width,const osg::Vec3& height, osg::Image* image=NULL);
 	osg::Drawable* createAxis(const osg::Vec3& corner,const osg::Vec3& xdir,const osg::Vec3& ydir,const osg::Vec3& zdir);
 	osg::Node* createMilestone();

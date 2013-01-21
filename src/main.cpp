@@ -73,6 +73,7 @@ const int MAX_FPS = 100;
 // Global
 //---------------------------------------------------------------------------
 int	gOsgArInputButton;
+int gOsgArAddModelIndex;
 vector<int> objVectorDeletable;
 
 extern vector<int> fingerIndex;
@@ -82,7 +83,7 @@ extern btVector3 pCollision;
 extern int collisionInd;
 extern interaction interact_state;
 
-
+CvPoint2D32f center_trimesh_osg;
 
 bt_ARMM_world *m_world;
 boost::shared_ptr<osg_Root> pOsgRoot;
@@ -95,41 +96,7 @@ Context niContext;
 DepthMetaData niDepthMD;
 ImageMetaData niImageMD;
 
-#ifdef USE_OPTICAL_FLOW
-FlowCapture * flow_capture;
-#endif
-
 bool running = true;
-
-bool loadKinectParams(char *filename, CvMat **params, CvMat **distortion);
-void loadKinectTransform(char *filename);
-osg::Node* osgNodeFromBtCollisionShape( const btConvexHullShape* hull, const btTransform& trans );
-void RenderScene(IplImage *arImage, Capture *capture);
-osg::Node* createVArrayFromHField(const btTransform& trans);
-void GenerateTrimeshGroundFromDepth(IplImage* depthIm, float markerDepth);
-osg::Node* createVArrayFromDepth();
-void inpaintDepth(DepthMetaData *niDepthMD, bool halfSize);
-float FindMarkerAffineRotation();
-void setWorldOrigin();
-void TransformImage(IplImage* depthIm, IplImage* ResDepth, float markerDepth, CvSize img_size, bool isDepth);
-void UpdateHandRegions();
-void removeNoise( IplImage* src, int size );
-void FindHands(IplImage *depthIm, IplImage *colourIm);
-void DetectFingertips(cv::Mat handMask);
-void DetectFingertips(cv::Ptr<IplImage> handMask, vector< vector<cv::Point> > & fingerTips);
-int CreateHand(int lower_left_corn_X, int lower_left_corn_Y) ;
-void UpdateAllHands();
-int Find_Num_Hand_Pixel(float depth);
-void AssignPhysics2Osgmenu();
-void ResetAddModelMode();
-void ResetTextureTransferMode();
-void ResetPanelCond();
-void ExecuteAction(const int & val);
-void CheckerArInput();
-int	 CheckerArModelButtonType();
-
-double cal_mean();
-double cal_std(double mean);
 
 Capture *capture;
 CvMat *RegistrationParams;
@@ -186,14 +153,6 @@ float curr_hands_ratio[MAX_NUM_HANDS];
 float ratio;
 #endif
 
-//Optical Flow
-#ifdef USE_OPTICAL_FLOW
-int OPT_X_STEP = 20;
-int OPT_Y_STEP = 20;
-int LK_SIZE = 15;
-bool RunOnce = true;
-#endif
-
 /////////////////////
 // To calculate FPS//
 /////////////////////
@@ -202,6 +161,38 @@ int    count_frame   = 0;
 deque<double> fps;
 double time_spent    = 0.0;
 /////////////////////
+
+
+//---------------------------------------------------------------------------
+//Prototype
+//---------------------------------------------------------------------------
+bool loadKinectParams(char *filename, CvMat **params, CvMat **distortion);
+void loadKinectTransform(char *filename);
+osg::Node* osgNodeFromBtCollisionShape( const btConvexHullShape* hull, const btTransform& trans );
+void RenderScene(IplImage *arImage, Capture *capture);
+osg::Node* createVArrayFromHField(const btTransform& trans);
+void GenerateTrimeshGroundFromDepth(IplImage* depthIm, float markerDepth);
+osg::Node* createVArrayFromDepth();
+void inpaintDepth(DepthMetaData *niDepthMD, bool halfSize);
+float FindMarkerAffineRotation();
+void setWorldOrigin();
+void TransformImage(IplImage* depthIm, IplImage* ResDepth, float markerDepth, CvSize img_size, bool isDepth);
+void UpdateHandRegions();
+void removeNoise( IplImage* src, int size );
+void FindHands(IplImage *depthIm, IplImage *colourIm);
+void DetectFingertips(cv::Mat handMask);
+void DetectFingertips(cv::Ptr<IplImage> handMask, vector< vector<cv::Point> > & fingerTips);
+int CreateHand(int lower_left_corn_X, int lower_left_corn_Y) ;
+void UpdateAllHands();
+int Find_Num_Hand_Pixel(float depth);
+void AssignPhysics2Osgmenu();
+void ResetTextureTransferMode();
+void ExecuteAction(const int & val);
+void CheckerArInput();
+int	 CheckerArModelButtonType();
+
+double cal_mean();
+double cal_std(double mean);
 
 namespace{
 	double cal_mean() {
@@ -300,13 +291,16 @@ int main(int argc, char* argv[])
 			printf("%s\n", strError);
 			return rc; break;
 		default:
-			printf("Open failed: %s\n", xnGetStatusString(rc));
+			printf("Open failed(xn): %s\n", xnGetStatusString(rc));
 			return rc;
 	}
 
 	//set camera parameter
-	capture = new Camera(1, CAPTURE_SIZE, CAMERA_PARAMS_FILENAME);
+	capture = new Camera(0, CAPTURE_SIZE, CAMERA_PARAMS_FILENAME);
 	RegistrationParams = scaleParams(capture->getParameters(), double(REGISTRATION_SIZE.width)/double(CAPTURE_SIZE.width));
+
+	//creating rendering object
+	pOsgRoot = boost::shared_ptr<osg_Root>(new osg_Root());
 
 	//init parameter for rendering
 	pOsgRoot->osg_init(calcProjection(RegistrationParams, capture->getDistortion(), REGISTRATION_SIZE));
@@ -327,9 +321,6 @@ int main(int argc, char* argv[])
 	kinectReg = new RegistrationOPIRA(new OCVSurf());
 	kinectReg->addResizedMarker(MARKER_FILENAME, 400);
 
-	//creating rendering object
-	pOsgRoot = boost::shared_ptr<osg_Root>(new osg_Root());
-
 	//physics
 	m_world = new bt_ARMM_world();
 	ground_grid = new float[ARMM::ConstParams::GRID_SIZE];
@@ -345,7 +336,8 @@ int main(int argc, char* argv[])
 #endif
 
 	//controls
-	KeyboardController *kc = new KeyboardController(m_world);
+	kc = new KeyboardController(m_world);
+
 	//XboxController *xc = new XboxController(m_world);
 
 	loadKinectTransform(KINECT_TRANSFORM_FILENAME);
@@ -389,8 +381,8 @@ int main(int argc, char* argv[])
 
 #if USE_OSGMENU == 1
 	AssignPhysics2Osgmenu();
-	ResetAddModelMode();
-	ResetPanelCond();
+	pOsgRoot->ResetAddModelMode();
+	pOsgRoot->ResetPanelCond();
 	ResetTextureTransferMode();
 #endif
 
@@ -845,7 +837,7 @@ void setWorldOrigin()
 	const int div = 4;
 	WORLD_ORIGIN_X = marker_origin.x/div; 
 	WORLD_ORIGIN_Y = marker_origin.y/div; 
-	center_trimesh = cvPoint2D32f(WORLD_ORIGIN_X, WORLD_ORIGIN_Y);
+	center_trimesh_osg = cvPoint2D32f(WORLD_ORIGIN_X, WORLD_ORIGIN_Y);
 	m_world->set_center_trimesh(WORLD_ORIGIN_X,WORLD_ORIGIN_Y);
 }
 
@@ -855,7 +847,7 @@ void registerMarker()
 	{
 		//Load in the marker for registration
 		pOsgRoot->osg_inittracker(MARKER_FILENAME, 400, markerSize.width);	
-		printf("Makerker Size = %d\n", markerSize.width);
+		printf("Reloaded Marker Size = %d\n", markerSize.width);
 		//Set OSG Menu
 
 		//Recreat world and controls
@@ -864,7 +856,7 @@ void registerMarker()
 		//delete xc;
 		delete m_world;
 		m_world = new bt_ARMM_world();
-		kc = new KeyboardController(m_world);
+		kc = new KeyboardController();
 		//xc = new XboxController(m_world);
 
 		m_world->setWorldDepth(MARKER_DEPTH);
@@ -874,10 +866,12 @@ void registerMarker()
 		transDepth160 = cvCreateImage(cvSize(MESH_SIZE.width, MESH_SIZE.height), IPL_DEPTH_32F, 1);
 		TransformImage(depthIm, transDepth160, MARKER_DEPTH, MESH_SIZE, true);
 		GenerateTrimeshGroundFromDepth(transDepth160, MARKER_DEPTH);
+
 		m_world->updateTrimesh(ground_grid);
 		m_world->setMinHeight(MinHeight);
 		m_world->setMaxHeight(MaxHeight);
 		m_world->initPhysics();
+
 #ifdef SIM_PARTICLES
 		CreateOSGSphereProxy();//osg spheres representation
 #endif
@@ -1318,7 +1312,7 @@ void CheckerArInput()
 		else if(buttonStr.find("reset.3ds") != string::npos)	//MODE: Reset virtual models
 		{
 			pOsgRoot->mOsgObject->osg_resetNodes();
-			ResetPanelCond();
+			pOsgRoot->ResetPanelCond();
 		}
 		else if(buttonStr.find("Transfer") != string::npos)	//MODE: Texture Transfer
 		{
@@ -1348,9 +1342,9 @@ void CheckerArInput()
 
 int CheckerArModelButtonType()
 {
-	if(pOsgRoot->getOsgArAddModelIndex() > 0)
+	if(gOsgArAddModelIndex > 0)
 	{
-		string touchStr = pOsgRoot->mOsgMenu->getMenuModelObjectArray().at(pOsgRoot->getOsgArAddModelIndex())->getName();
+		string touchStr = pOsgRoot->mOsgMenu->getMenuModelObjectArray().at(gOsgArAddModelIndex)->getName();
 		cout << touchStr.c_str() << endl;
 
 		int val = 0;

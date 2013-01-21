@@ -10,6 +10,9 @@
 
 namespace ARMM
 {
+	const char * ConstParams::DATABASEDIR = "C:/Users/Frontier2/Dropbox/Lab/ModelDatabase/";
+	const char * ConstParams::MENUDATADIR = "C:/Users/Frontier2/Dropbox/Lab/MenuDatabase/";
+
 	const float ConstParams::HAND_BOX_CM = 20.f; // 25 cm
 	const float ConstParams::KINECT_PIX_PER_DEPTH = 0.4610778;
 	const int	ConstParams::GRID_SIZE =19200;
@@ -33,7 +36,7 @@ namespace ARMM
 	const int ConstParams::WINDOW_HEIGHT = 960;
 
 	//for virtual objects
-	const int ConstParams::MAX_NUM_VIR_OBJ = 5;
+	const int ConstParams::MAX_NUM_VIR_OBJECT = 5;
 
 	//for virtual hands
 	const int ConstParams::SPHERE_SCALE = 10;

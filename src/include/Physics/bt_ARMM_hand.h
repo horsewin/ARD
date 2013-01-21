@@ -1,13 +1,13 @@
 #ifndef BT_ARMM_HAND_H
 #define BT_ARMM_HAND_H
 
-class btCollisionShape;
-
 #include "btBulletDynamicsCommon.h"
 #include <vector>
 
 //#define USE_CCD 1
 #define FRICTION_ 500.0f
+
+class btCollisionShape;
 
 class bt_ARMM_hand {
 	public:

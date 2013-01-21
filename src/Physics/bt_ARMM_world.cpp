@@ -107,6 +107,8 @@ extern int Virtual_Objects_Count;
 extern vector<int> objVectorDeletable;
 extern vector<int> fingersIdx;
 
+extern int gOsgArAddModelIndex;
+
 int		collide[2];       //indices  of collided objects
 btVector3	pCollision;  //coordinate with a collided object
 btVector3 pColLocalOnObj;
@@ -516,11 +518,9 @@ bt_ARMM_world::bt_ARMM_world(void)
 
 bt_ARMM_world::~bt_ARMM_world(void) { //cleanup in the reverse order of creation/initialization
 	//remove the rigidbodies from the dynamics world and delete them
-	int i;
-
 	if (hasInit)
 	{
-		for (i=m_dynamicsWorld->getNumCollisionObjects()-1; i>=0 ;i--) 
+		for (int i=m_dynamicsWorld->getNumCollisionObjects()-1; i>=0 ;i--) 
 		{
 			btCollisionObject* obj = m_dynamicsWorld->getCollisionObjectArray()[i];
 			btRigidBody* body = btRigidBody::upcast(obj);
@@ -1590,7 +1590,7 @@ void bt_ARMM_world::DecideCollisionModelButton()
 		if( static_cast<int>(mModelButton.at(i)->getFriction()) == selectID)
 		{
 			cout << "Select object done!! " << selectID << endl;
-			osgArAddModelIndex = selectID;
+			gOsgArAddModelIndex = selectID;
 		}
 	}
 }

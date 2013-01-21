@@ -14,6 +14,7 @@
 #include "Rendering\osg_Init.h"
 #include "Rendering\osg_geom_data.h"
 #include "Rendering\osg_Update.h"
+
 #include "constant.h"
 
 #include <osgShadow/ShadowMap>
@@ -33,10 +34,13 @@ const osg::Quat DEFAULTATTIDUTE =
 //---------------------------------------------------------------------------
 vector<int> fingersIdx;
 vector<int> fingerIndex;
+float TrimeshScale;
 
+extern CvPoint2D32f center_trimesh_osg;
 extern bool panelCollisionLock;
 extern panelinput panelInput;
 extern int gOsgArInputButton;
+extern int gOsgArAddModelIndex;
 
 namespace
 {
@@ -52,10 +56,15 @@ namespace
 osg_Root::osg_Root()
 {
 	mAddModelAnimation	= 0.0;
-	mOsgArAddModelIndex	= -1;
+	gOsgArAddModelIndex	= -1;
 
-	//Create Height field
-	CreateGround();
+	TrimeshScale = 1;
+
+	//child objects of this root1
+	mOsgInit	= boost::shared_ptr<osg_Init>( new osg_Init());
+	mOsgObject	= boost::shared_ptr<osg_Object>( new osg_Object());
+	mOsgGeom	= boost::shared_ptr<osg_geom>( new osg_geom());
+	mOsgUpdater = boost::shared_ptr<osg_Update>( new osg_Update());
 }
 
 osg_Root::~osg_Root()
@@ -65,11 +74,6 @@ osg_Root::~osg_Root()
 
 void osg_Root::osg_init(double *projMatrix) 
 {
-	//child objects of this root1
-	mOsgInit	= boost::shared_ptr<osg_Init>( new osg_Init());
-	mOsgGeom	= boost::shared_ptr<osg_geom>( new osg_geom());
-	mOsgUpdater = boost::shared_ptr<osg_Update>( new osg_Update());
-
 	//
 	mVideoImage = new osg::Image();
 	mGLImage = cvCreateImage(cvSize(512,512), IPL_DEPTH_8U, 3);
@@ -125,6 +129,8 @@ void osg_Root::osg_init(double *projMatrix)
 	//for input
 	gOsgArInputButton	= -1;
 
+	//Create Height field
+	CreateGround();
 };
 
 void osg_Root::osg_uninit() 
@@ -344,8 +350,8 @@ void osg_Root::osg_UpdateHeightfieldTrimesh(float *ground_grid)
 	int index =0;
 	for(int i = 0; i < NUM_VERTS_X-1; i++) {
 		for(int j = 0; j < NUM_VERTS_Y-1; j++) {
-			float x = (float)(i- center_trimesh.x)*TrimeshScale; 
-			float y = (float)(j- (120-center_trimesh.y))*TrimeshScale;
+			float x = (float)(i- center_trimesh_osg.x)*TrimeshScale; 
+			float y = (float)(j- (120-center_trimesh_osg.y))*TrimeshScale;
 			mOsgObject->mHeightFieldPoints->at(index++) = osg::Vec3(x, y, ground_grid[j*NUM_VERTS_X+i]); 
 			mOsgObject->mHeightFieldPoints->at(index++) = osg::Vec3(x+TrimeshScale, y, ground_grid[j*NUM_VERTS_X+i+1]);
 			mOsgObject->mHeightFieldPoints->at(index++) = osg::Vec3(x+TrimeshScale, y+TrimeshScale, ground_grid[(j+1)*NUM_VERTS_X+i+1]); 
@@ -559,19 +565,19 @@ void osg_Root::ResetModelButtonPos()
 //add function for AR input
 osg::Vec3 osg_Root::GetARMenuPos()
 {
-
+	return mOsgMenu->getMenuModelTransArray().at(gOsgArAddModelIndex)->getPosition();
 }
 
 int osg_Root::AddNewObjFromARButton(const int & index)
 {
-	osg::Vec3 pos(mOsgMenu->getMenuModelTransArray().at(mOsgArAddModelIndex)->getPosition());
+	osg::Vec3 pos(mOsgMenu->getMenuModelTransArray().at(gOsgArAddModelIndex)->getPosition());
 
-	int val = mOsgMenu->GetKeyAssignment(static_cast<unsigned int>(mOsgArAddModelIndex));
+	int val = mOsgMenu->GetKeyAssignment(static_cast<unsigned int>(gOsgArAddModelIndex));
 
 	//create model unit with osg::Node
 	osg::ref_ptr<osg::Node> node = dynamic_cast<osg::Node*>
 	(
-		mOsgMenu->getMenuModelObjectArray().at(mOsgArAddModelIndex)->clone(osg::CopyOp::SHALLOW_COPY)
+		mOsgMenu->getMenuModelObjectArray().at(gOsgArAddModelIndex)->clone(osg::CopyOp::SHALLOW_COPY)
 	);
 
 	//register a new model as an osg unit to osg world
@@ -596,7 +602,7 @@ void osg_Root::ResetArModelButtonType()
 	ToggleVirtualObjVisibility();
 	ResetAddModelMode();
 	ResetPanelCond();
-	setOsgArAddModelIndex(-1);
+	gOsgArAddModelIndex = -1;
 }
 
 void osg_Root::ResetPanelCond()
@@ -605,17 +611,17 @@ void osg_Root::ResetPanelCond()
 	panelInput			= NOTHING;
 }
 
-//************************************************************************************
-// Private functions
-//************************************************************************************
 void osg_Root::ResetAddModelMode()
 {
 	mAddArModel = false; //pOsgRoot->SetAddArModel(false);
-	mOsgArAddModelIndex = -1;
+	gOsgArAddModelIndex = -1;
 	ResetModelButtonPos();
 }
 
 
+//************************************************************************************
+// Private functions
+//************************************************************************************
 /** create quad at specified position. */
 osg::Drawable* osg_Root::createSquare(const osg::Vec3& corner,const osg::Vec3& width,const osg::Vec3& height, osg::Image* image)
 {

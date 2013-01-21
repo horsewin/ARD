@@ -33,6 +33,12 @@ namespace
 //---------------------------------------------------------------------------
 // Code
 //---------------------------------------------------------------------------
+osg_Update::osg_Update()
+{}
+
+osg_Update::~osg_Update()
+{}
+
 void osg_Update::UpdateHand(boost::shared_ptr<osg_Object> osgObject, int index, float *x, float *y, float *grid)
 {
 	const int DEPTH_SCALE = 10; // to convert cm to mm scale

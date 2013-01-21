@@ -15,8 +15,8 @@ class osg_Object;
 class osg_Init
 {
 public:
-	osg_Init(){};
-	~osg_Init(){};
+	osg_Init();
+	~osg_Init();
 
 	//Init of Height field
 	void CreateHeightfield(boost::shared_ptr<osg_Object> osgObject);

@@ -14,6 +14,7 @@
 #include "Physics/bt_ARMM_world.h"
 #include "Rendering/osg_Root.h"
 #include "Rendering\osg_Object.h"
+#include "Rendering\osg_geom_data.h"
 #include "constant.h"
 
 #include <Windows.h>
@@ -46,18 +47,28 @@ bool WIREFRAME_MODE = false;
 //---------------------------------------------------------------------------
 // Code
 //---------------------------------------------------------------------------
-void KeyboardController::PressB()
+namespace
 {
-	// Add box shape objects
-	osgAddObjectNode(world->CreateSoftTexture("Data/tex.bmp"));
-	cout << "create the soft body object" << endl;
+	inline bool LoadCheck(void * ptr, const char * filename)
+	{
+		if( ptr == NULL){
+			std::cerr << "Error : No such file in the directory or incorrect path.  " << filename << std::endl;
+			return false;
+		}
+		return true;
+	}
 }
 
-void KeyboardController::PressN()
+
+KeyboardController::KeyboardController(bt_ARMM_world *m_world) 
+	: Controller(m_world)
 {
-	
-	int index = world->create_Sphere();
-	osgAddObjectNode(osgNodeFromBtSphere(SPHERE_SIZE, world->get_Object_Transform(index)));
+	mOsgGeom	= boost::shared_ptr<osg_geom>( new osg_geom());
+}
+
+KeyboardController::~KeyboardController()
+{
+	mKeyAssignment.clear();
 }
 
 int KeyboardController::TransmitInput(const int & input)
@@ -69,6 +80,9 @@ int KeyboardController::TransmitInput(const int & input)
 
 int KeyboardController::check_input(boost::shared_ptr<osg_Root> osgRoot)
 {
+	//key offset to use key assignment info
+	const int offset = 79;
+
 #if CAR_SIMULATION == 1
 	//Car Number 1
 	if (getKey(VK_UP)) {
@@ -109,6 +123,7 @@ int KeyboardController::check_input(boost::shared_ptr<osg_Root> osgRoot)
 	if (getKey(84)) world->resetCarScene(1); //T
 #endif /*SIM_MICROMACHINE*/
 
+	//about height field
 	if (getKey(86)) { //V
 		WIREFRAME_MODE = !WIREFRAME_MODE;
 		if(WIREFRAME_MODE) 
@@ -124,17 +139,20 @@ int KeyboardController::check_input(boost::shared_ptr<osg_Root> osgRoot)
 	}
 
 #ifdef SIM_MICROMACHINE
-	if(Virtual_Objects_Count < MAX_NUM_VIR_OBJ) 
+	if(osgRoot->mOsgObject->getVirtualObjectsCount() < ARMM::ConstParams::MAX_NUM_VIR_OBJECT) 
 	{
+		//for debug
 		if (getKey(66)) { //B
-			PressB();
+			osgRoot->osgAddObjectNode(world->CreateSoftTexture("Data/tex.bmp"));
 			return 66;
 		}
+		//for debug
 		if (getKey(77)) { //M
 			//interact_state = PINCH;
 			gOsgArInputButton = 203;
 			return 203;
 		}
+
 		if (getKey(79)) { //o
 			//string modelname(DATABASEDIR);
 			//modelname+="cube/cube.3ds";
@@ -153,8 +171,8 @@ int KeyboardController::check_input(boost::shared_ptr<osg_Root> osgRoot)
 			modelname+="keyboard/keyboard.3ds";
 			//string modelname = "HatuneMiku.3ds";
 			int index = world->create_3dsmodel(modelname.c_str());
-			osgAddObjectNode(osgNodeFrom3dsModel(world->GetModelName(), world->get3dsScale(), world->get_Object_Transform(index)));
-			Virtual_Objects_Count++;
+			osgRoot->osgAddObjectNode(mOsgGeom->osgNodeFrom3dsModel(world->GetModelName(), world->get3dsScale(), world->get_Object_Transform(index)));
+			osgRoot->mOsgObject->IncrementObjCount();
 			world->ChangeAttribute(10, -5, 5, index);
 
 			return 80;
@@ -162,17 +180,17 @@ int KeyboardController::check_input(boost::shared_ptr<osg_Root> osgRoot)
 		if (getKey(81)) { //q
 			string modelname(ARMM::ConstParams::DATABASEDIR);
 			modelname+="cube/cube.3ds";
-			//string modelname = "HatuneMiku.3ds";
 			int index = world->create_3dsmodel(modelname.c_str());
-			osgAddObjectNode(osgNodeFrom3dsModel(world->GetModelName(), world->get3dsScale(), world->get_Object_Transform(index)));
-			Virtual_Objects_Count++;
+			osgRoot->osgAddObjectNode(mOsgGeom->osgNodeFrom3dsModel(world->GetModelName(), world->get3dsScale(), world->get_Object_Transform(index)));
+			osgRoot->mOsgObject->IncrementObjCount();
 			world->ChangeAttribute(25, -5, 5, index);
 								
 			return 81;
 		}
 
 		if (getKey(78) ) { //N
-			PressN();
+			int index = world->create_Sphere();
+			osgRoot->osgAddObjectNode(mOsgGeom->osgNodeFromBtSphere(ARMM::ConstParams::SPHERE_SIZE, world->get_Object_Transform(index)));
 			osgRoot->mOsgObject->IncrementObjCount();
 			return 78;
 		}
@@ -208,6 +226,68 @@ int KeyboardController::check_input(boost::shared_ptr<osg_Root> osgRoot)
 		}
 	}
 	return 0;
+}
+
+
+//************************************************************************************
+// Private functions
+//************************************************************************************
+
+bool KeyboardController::RegisteringObject(const char * filename, boost::shared_ptr<osg_Root> osg_Root)
+{
+	float scale = 10;
+	ostringstream str;
+	const char * format = ".3ds";
+
+	str << ARMM::ConstParams::DATABASEDIR << filename << "/" << filename << format;
+	osg::ref_ptr<osg::Node> obj = osgDB::readNodeFile(str.str().c_str());
+	if(!LoadCheck(obj.get(), str.str().c_str()))
+	{
+		return false;
+	}
+
+	string tmpFilename(filename);
+	tmpFilename += format;
+	obj->setName(tmpFilename);
+
+	osg_Root->osgAddObjectNode(obj.get());
+	return true;
+}
+
+void KeyboardController::AssignmentKeyinput(const char * settingFilename)
+{
+	ostringstream setInput;
+	setInput <<  ARMM::ConstParams::DATABASEDIR << settingFilename;
+
+	std::ifstream input(setInput.str().c_str());
+
+	if(!input.is_open())
+	{
+		cerr << "Setting file cannot be openned!!" << endl;
+		cerr << "Filename is " << setInput.str().c_str() << endl;
+		exit(EXIT_SUCCESS);
+	}
+
+	while(input)
+	{
+		char line[1024] ;
+		input.getline(line, 1024) ;
+		std::stringstream line_input(line) ;
+
+		pair<unsigned int, string> tmpKeyAssignment;
+
+		//first word means a value assignment
+		unsigned int value;
+		line_input >> value;
+		tmpKeyAssignment.first = value;
+
+		//second word means a name of model
+		std::string keyword;
+		line_input >> keyword;
+		tmpKeyAssignment.second = keyword;
+
+		mKeyAssignment.push_back(tmpKeyAssignment);
+	}
 }
 
 inline bool KeyboardController::getKey(int key)

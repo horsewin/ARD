@@ -37,7 +37,7 @@ namespace ARMM
 		static const int WINDOW_HEIGHT;
 
 		//for virtual objects
-		static const int MAX_NUM_VIR_OBJ;
+		static const int MAX_NUM_VIR_OBJECT;
 
 		//for virtual hands
 		static const int SPHERE_SCALE;

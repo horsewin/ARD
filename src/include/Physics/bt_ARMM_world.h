@@ -1,17 +1,5 @@
-
 #ifndef BT_ARMM_WORLD_H
 #define BT_ARMM_WORLD_H
-
-class btBroadphaseInterface;
-class btOverlappingPairCache;
-class btCollisionDispatcher;
-class btConstraintSolver;
-class btVAehicleTuning;
-struct btVehicleRaycaster;
-class btCollisionShape;
-class bt_ARMM_hand;
-struct btCollisionAlgorithmCreateFunc;
-class btDefaultCollisionConfiguration;
 
 //Bullet Physics Library
 #include "btBulletDynamicsCommon.h"
@@ -40,9 +28,6 @@ class btDefaultCollisionConfiguration;
 #include "UserConstant.h"
 #include "ARMM\Rendering\osg_Menu.h"
 
-#define FRICTION 1.0f
-#define RESTITUTION 0.0
-
 struct Car{
 	float	chassis_width;
 	float	chassis_height;
@@ -70,6 +55,17 @@ struct Car{
 	float	wheelWidthOffsetFront;
 	float	wheelWidthOffsetBack;
 };
+
+class btBroadphaseInterface;
+class btOverlappingPairCache;
+class btCollisionDispatcher;
+class btConstraintSolver;
+class btVAehicleTuning;
+struct btVehicleRaycaster;
+class btCollisionShape;
+class bt_ARMM_hand;
+struct btCollisionAlgorithmCreateFunc;
+class btDefaultCollisionConfiguration;
 
 class bt_ARMM_world 
 {
