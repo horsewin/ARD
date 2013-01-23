@@ -103,7 +103,6 @@
     <ClInclude Include="..\src\include\Controls\ARControls.h" />
     <ClInclude Include="..\src\include\Controls\Controls.h" />
     <ClInclude Include="..\src\include\Controls\KeyboardControls.h" />
-    <ClInclude Include="..\src\include\Controls\XBoxControls.h" />
     <ClInclude Include="..\src\include\leastsquaresquat.h" />
     <ClInclude Include="..\src\include\main.h" />
     <ClInclude Include="..\src\include\MyShadowMap.h" />

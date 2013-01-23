@@ -425,7 +425,7 @@ namespace{
 // Code	
 //---------------------------------------------------------------------------
 bt_ARMM_world::bt_ARMM_world(void)
-	:m_carChassis(0),m_indexVertexArrays(0),m_vertices(0), m_sphere_rep(true)
+	:m_indexVertexArrays(0),m_vertices(0), m_sphere_rep(true)
 {
 
 	hasInit = false;
@@ -441,70 +441,6 @@ bt_ARMM_world::bt_ARMM_world(void)
 	rightIndex = 0; 
 	upIndex = 2; 
 	forwardIndex = 1;
-
-#if CAR_SIMULATION == 1
-
-	wheelDirectionCS0[0] = btVector3(0,0,-1);
-	wheelAxleCS[0] = btVector3(1,0,0);
-	suspensionRestLength[0] = btScalar(0.6);
-
-	wheelDirectionCS0[1] = btVector3(0,0,-1);
-	wheelAxleCS[1] = btVector3(1,0,0);
-	suspensionRestLength[1] = btScalar(0.6);
-
-	Car_Array[0].chassis_width = 1.f;
-	Car_Array[0].chassis_length = 2.8f;
-	Car_Array[0].chassis_height = 0.7f;
-	Car_Array[0].car_mass = 250;
-	Car_Array[0].gEngineForce = 0.f;
-	Car_Array[0].gBreakingForce = 0.f;
-	Car_Array[0].maxEngineForce = 2500.f;//this should be engine/velocity dependent //1000
-	Car_Array[0].maxBreakingForce = 200.f;//100
-	Car_Array[0].defaultBreakingForce = 50.f;//10
-	Car_Array[0].gVehicleSteering = 0.f;
-	Car_Array[0].steeringIncrement = 0.2f;//0.04f
-	Car_Array[0].steeringClamp = 0.5f;//0.3f
-	Car_Array[0].wheelRadius = 0.5f;
-	Car_Array[0].wheelWidth = 0.4f;
-	Car_Array[0].wheelFriction = 1000;//BT_LARGE_FLOAT;
-	Car_Array[0].suspensionStiffness = 20.f;
-	Car_Array[0].suspensionDamping = 2.3f;
-	Car_Array[0].suspensionCompression = 4.4f;
-	Car_Array[0].rollInfluence = 1.0f;//0.1f;
-	Car_Array[0].chassisDistFromGround = 1.3f;
-	Car_Array[0].connectionHeight = 1.3f;
-	Car_Array[0].wheelLengthOffsetFront = 1.1f;
-	Car_Array[0].wheelLengthOffsetBack = 1.2f;
-	Car_Array[0].wheelWidthOffsetFront = 1.1f;
-	Car_Array[0].wheelWidthOffsetBack = 1.1f;
-
-	Car_Array[1].chassis_width = 1.3f;
-	Car_Array[1].chassis_length = 2.8f;
-	Car_Array[1].chassis_height = 0.5f;
-	Car_Array[1].car_mass = 250;
-	Car_Array[1].gEngineForce = 0.f;
-	Car_Array[1].gBreakingForce = 0.f;
-	Car_Array[1].maxEngineForce = 2500.f;//this should be engine/velocity dependent //1000
-	Car_Array[1].maxBreakingForce = 200.f;//100
-	Car_Array[1].defaultBreakingForce = 50.f;//10
-	Car_Array[1].gVehicleSteering = 0.f;
-	Car_Array[1].steeringIncrement = 0.2f;//0.04f
-	Car_Array[1].steeringClamp = 0.5f;//0.3f
-	Car_Array[1].wheelRadius = 0.5f;
-	Car_Array[1].wheelWidth = 0.4f;
-	Car_Array[1].wheelFriction = 1000;//BT_LARGE_FLOAT;
-	Car_Array[1].suspensionStiffness = 20.f;
-	Car_Array[1].suspensionDamping = 2.3f;
-	Car_Array[1].suspensionCompression = 4.4f;
-	Car_Array[1].rollInfluence = 1.0f;//0.1f;
-	Car_Array[1].chassisDistFromGround = 1.3f;
-	Car_Array[1].connectionHeight = 1.2f;
-	Car_Array[1].wheelLengthOffsetFront = 1.1f;
-	Car_Array[1].wheelLengthOffsetBack	= 1.2f;
-	Car_Array[1].wheelWidthOffsetFront	= 1.3f;
-	Car_Array[1].wheelWidthOffsetBack	= 1.2f;
-
-#endif /* CAR_SIMULATION == 1*/
 
 	worldDepth = 0;
 	m_rawHeightfieldData = new float[ARMM::ConstParams::GRID_SIZE];
@@ -551,20 +487,6 @@ bt_ARMM_world::~bt_ARMM_world(void)
 		delete m_vertices;
 		delete m_dynamicsWorld;
 
-#if CAR_SIMULATION == 1
-		if(!chassisMotionState.empty())
-		{
-			std::cout << chassisMotionState.size() << std::endl;
-			//chassisMotionState.clear();
-		}else{
-			std::cerr << "chassisMotionState vector is empty!!" << std::endl;
-		}
-		m_carChassis.clear();
-		m_vehicleRayCaster.clear();
-		m_vehicle.clear();
-		m_wheelShape.clear();
-#endif /*SIM_MICROMACHINE*/
-
 		delete m_constraintSolver;
 		delete m_overlappingPairCache; //delete broadphase
 		delete m_dispatcher; //delete dispatcher
@@ -574,15 +496,11 @@ bt_ARMM_world::~bt_ARMM_world(void)
 
 void bt_ARMM_world::initPhysics() 
 {
-#ifdef USE_PARALLEL_DISPATCHER
-	m_threadSupportSolver = 0;
-	m_threadSupportCollision = 0;
-#endif
 
 	//set ground model with physics
-  groundShape = new btBoxShape(btVector3(150,1,150));
+	groundShape = new btBoxShape(btVector3(150,1,150));
 
-  //	m_collisionConfiguration = new btDefaultCollisionConfiguration();
+	//m_collisionConfiguration = new btDefaultCollisionConfiguration();
 	btDefaultCollisionConstructionInfo cci;
 	cci.m_defaultMaxPersistentManifoldPoolSize = maxProxies;
 	m_collisionConfiguration = new btDefaultCollisionConfiguration(cci);
@@ -659,17 +577,22 @@ m_threadSupportCollision = new Win32ThreadSupport(Win32ThreadSupport::Win32Threa
 	m_vertices = new btVector3[totalVerts];
 	int* gIndices = new int[totalTriangles*3];
 
-	for (int i=0;i<NUM_VERTS_X;i++) {
-		for (int j=0;j<NUM_VERTS_Y;j++) {
+	for (int i=0;i<NUM_VERTS_X;i++) 
+	{
+		for (int j=0;j<NUM_VERTS_Y;j++) 
+		{
 			float x = (i-center_trimesh.getX())*TRIANGLE_SIZE;
 			float y = (j-(120-center_trimesh.getY()))*TRIANGLE_SIZE;
 			float height = m_rawHeightfieldData[j*NUM_VERTS_X+i];
 			m_vertices[i+j*NUM_VERTS_X].setValue(x, y, height);
 		}
 	}
+
 	int index=0;
-	for (int i=0;i<NUM_VERTS_X-1;i++) {
-		for (int j=0;j<NUM_VERTS_Y-1;j++) {
+	for (int i=0;i<NUM_VERTS_X-1;i++) 
+	{
+		for (int j=0;j<NUM_VERTS_Y-1;j++) 
+		{
 			gIndices[index++] = j*NUM_VERTS_X+i;
 			gIndices[index++] = j*NUM_VERTS_X+i+1;
 			gIndices[index++] = (j+1)*NUM_VERTS_X+i+1;
@@ -708,68 +631,6 @@ m_threadSupportCollision = new Win32ThreadSupport(Win32ThreadSupport::Win32Threa
 	m_dynamicsWorld->addRigidBody(groundRigidBody);
 	/*End trimesh ground*/
 
-#ifdef SIM_MICROMACHINE
-	/*Car Creation - Chassis*/
-	for (int i = 0; i < NUM_CARS; i++ ) {	
-		btCollisionShape* chassisShape = new btBoxShape(btVector3(Car_Array[i].chassis_width,Car_Array[i].chassis_length, Car_Array[i].chassis_height));
-		m_collisionShapes.push_back(chassisShape);
-		btCompoundShape* compound = new btCompoundShape();
-		m_collisionShapes.push_back(compound);
-
-		btTransform localTrans;
-		localTrans.setIdentity();
-		localTrans.setOrigin(btVector3(0,0,Car_Array[i].chassisDistFromGround));//localTrans effectively shifts the center of mass with respect to the chassis
-
-		compound->addChildShape(localTrans,chassisShape);
-	
-		chassisMotionState.push_back(boost::shared_ptr<btDefaultMotionState>(new btDefaultMotionState(btTransform(btQuaternion(0,0,0,1),btVector3(0,0,0)))));
-		btVector3 localInertia(0, 0, 0);
-		compound->calculateLocalInertia(Car_Array[i].car_mass,localInertia);
-		btRigidBody::btRigidBodyConstructionInfo carRigidBody1CI( Car_Array[i].car_mass, chassisMotionState.at(i).get(), compound, localInertia);
-		m_carChassis.push_back(boost::shared_ptr<btRigidBody>( new btRigidBody(carRigidBody1CI)));
-
-		m_dynamicsWorld->addRigidBody(m_carChassis.at(i).get());
-
-		m_wheelShape.push_back(boost::shared_ptr<btCylinderShapeX>(new btCylinderShapeX(btVector3(Car_Array[i].wheelWidth,Car_Array[i].wheelRadius,Car_Array[i].wheelRadius))));
-		{
-			m_vehicleRayCaster.push_back(boost::shared_ptr<btDefaultVehicleRaycaster>(new btDefaultVehicleRaycaster(m_dynamicsWorld)));
-			m_vehicle.push_back(boost::shared_ptr<btRaycastVehicle>(new btRaycastVehicle(m_tuning[i], m_carChassis.at(i).get() ,m_vehicleRayCaster.at(i).get())));
-			///never deactivate the vehicle
-			m_carChassis.at(i)->setActivationState(DISABLE_DEACTIVATION);
-			m_dynamicsWorld->addVehicle(m_vehicle.at(i).get());
-			bool isFrontWheel=true;
-
-			m_vehicle.at(i)->setCoordinateSystem(rightIndex,upIndex,forwardIndex);
-			btVector3 connectionPointCS0(Car_Array[i].wheelWidthOffsetFront*CUBE_HALF_EXTENTS-(0.3*Car_Array[i].wheelWidth),Car_Array[i].wheelLengthOffsetFront*2*CUBE_HALF_EXTENTS-Car_Array[i].wheelRadius, Car_Array[i].connectionHeight);
-			m_vehicle.at(i)->addWheel(connectionPointCS0,wheelDirectionCS0[i],wheelAxleCS[i],suspensionRestLength[i],Car_Array[i].wheelRadius,m_tuning[i],isFrontWheel);
-			connectionPointCS0 = btVector3(Car_Array[i].wheelWidthOffsetFront*-CUBE_HALF_EXTENTS+(0.3*Car_Array[i].wheelWidth),Car_Array[i].wheelLengthOffsetFront*2*CUBE_HALF_EXTENTS-Car_Array[i].wheelRadius, Car_Array[i].connectionHeight);
-			m_vehicle.at(i)->addWheel(connectionPointCS0,wheelDirectionCS0[i],wheelAxleCS[i],suspensionRestLength[i],Car_Array[i].wheelRadius,m_tuning[i],isFrontWheel);
-			connectionPointCS0 = btVector3(Car_Array[i].wheelWidthOffsetBack*-CUBE_HALF_EXTENTS+(0.3*Car_Array[i].wheelWidth),Car_Array[i].wheelLengthOffsetBack*(-2)*CUBE_HALF_EXTENTS+Car_Array[i].wheelRadius, Car_Array[i].connectionHeight);
-			isFrontWheel = false;
-			m_vehicle.at(i)->addWheel(connectionPointCS0,wheelDirectionCS0[i],wheelAxleCS[i],suspensionRestLength[i],Car_Array[i].wheelRadius,m_tuning[i],isFrontWheel);
-			connectionPointCS0 = btVector3(Car_Array[i].wheelWidthOffsetBack*CUBE_HALF_EXTENTS-(0.3*Car_Array[i].wheelWidth),Car_Array[i].wheelLengthOffsetBack*(-2)*CUBE_HALF_EXTENTS+Car_Array[i].wheelRadius, Car_Array[i].connectionHeight);
-			m_vehicle.at(i)->addWheel(connectionPointCS0,wheelDirectionCS0[i],wheelAxleCS[i],suspensionRestLength[i],Car_Array[i].wheelRadius,m_tuning[i],isFrontWheel);
-			for (int k=0;k<m_vehicle.at(i)->getNumWheels();k++) 
-			{
-				btWheelInfo& wheel = m_vehicle.at(i)->getWheelInfo(k);
-				wheel.m_suspensionStiffness = Car_Array[i].suspensionStiffness;
-				wheel.m_wheelsDampingRelaxation = Car_Array[i].suspensionDamping;
-				wheel.m_wheelsDampingCompression = Car_Array[i].suspensionCompression;
-				wheel.m_frictionSlip = Car_Array[i].wheelFriction;
-				wheel.m_rollInfluence = Car_Array[i].rollInfluence;
-			}
-		}
-	}
-
-	resetCarScene(0);
-	resetCarScene(1);
-
-#endif /*SIM_MICROMACHINE*/
-
-#ifdef SIM_PARTICLES
-	createWorldSphereProxy();
-#endif
-
 	m_clock.reset();
 
 	hasInit = true;
@@ -784,26 +645,14 @@ void bt_ARMM_world::Update()
 	DecideCollisionPanel();
 	DecideCollisionModelButton();
 
-#ifdef SIM_MICROMACHINE
-
-	//for debug to emerge the error of collision coord
-  	//m_carChassis.at(0)->setCenterOfMassTransform(btTransform(btQuaternion(0,0,0,1),btVector3(pCollision[0], pCollision[1], pCollision[2])));
-	
-	setCarMovement();
-	for (int i = 0; i < NUM_CARS; i++) 
-	{
-		for (int j=0; j < m_vehicle.at(i)->getNumWheels(); j++) {
-			m_vehicle.at(i)->updateWheelTransform(j,true); 
-		}
-	}
-#endif /*SIM_MICROMACHINE*/
-
 	//check the object to delete it
 	objVectorDeletable.clear();
 
-	REP(i,m_objectsBody.size()){
+	REP(i,m_objectsBody.size())
+	{
 		btVector3 trans = m_objectsBody[i]->getCenterOfMassTransform().getOrigin();
-		if( trans.getZ() < -10 ){
+		if( trans.getZ() < -10 )
+		{
 			objVectorDeletable.push_back(i);
 		}
 	}
@@ -832,103 +681,11 @@ void bt_ARMM_world::Update()
 //	m_worldInfo.m_sparsesdf.GarbageCollect();
 }
 
-void bt_ARMM_world::setCarMovement() 
+btScalar bt_ARMM_world::getDeltaTimeMicroseconds() 
 {
-	//Drive front wheels
-	for (int i = 0; i < NUM_CARS; i++) {
-		m_vehicle.at(i)->setSteeringValue(Car_Array[i].gVehicleSteering,0);
-		m_vehicle.at(i)->setBrake(Car_Array[i].gBreakingForce,0);
-		m_vehicle.at(i)->setSteeringValue(Car_Array[i].gVehicleSteering,1);
-		m_vehicle.at(i)->setBrake(Car_Array[i].gBreakingForce,1);
-
-		//Drive rear wheels
-		m_vehicle.at(i)->applyEngineForce(Car_Array[i].gEngineForce,2);
-		m_vehicle.at(i)->setBrake(Car_Array[i].gBreakingForce,2);
-		m_vehicle.at(i)->applyEngineForce(Car_Array[i].gEngineForce,3);
-		m_vehicle.at(i)->setBrake(Car_Array[i].gBreakingForce,3);
-	}
-	m_carChassis.at(0)->setRestitution(RESTITUTION);
-	m_carChassis.at(1)->setRestitution(RESTITUTION);
-}
-
-btTransform bt_ARMM_world::getCarPose(int index) {
-	btTransform trans;
-	m_carChassis.at(index)->getMotionState()->getWorldTransform(trans);
-	return trans;
-}
-
-btTransform bt_ARMM_world::getWheelTransform(int carIndex, int wheelInt) {
-	btTransform trans = m_vehicle.at(carIndex)->getWheelTransformWS(wheelInt);
-	//btQuaternion rot = m_vehicle.at(carIndex)->getWheelInfo(wheelInt).m_worldTransform.getRotation();
-	//m_vehicle.at(carIndex)->getWheelInfo(wheelInt).m_worldTransform.getOpenGLMatrix(m);
-	//m_carChassis.at(index)->getMotionState()->getWorldTransform(trans);
-	return trans;
-}
-
-
-btScalar bt_ARMM_world::getDeltaTimeMicroseconds() {
 	btScalar dt = (btScalar)m_clock.getTimeMicroseconds();
 	m_clock.reset();
 	return dt;
-}
-
-void bt_ARMM_world::resetEngineForce(int index) {
-	Car_Array[index].gEngineForce = 0.f;
-	Car_Array[index].gBreakingForce = Car_Array[index].defaultBreakingForce; 
-	//printf("reset engine force\n");
-}
-
-void bt_ARMM_world::accelerateEngine(int index) {
-	Car_Array[index].gEngineForce = Car_Array[index].maxEngineForce;
-	Car_Array[index].gBreakingForce = 0.f;
-	//printf("accelerate \n");
-}
-
-void bt_ARMM_world::decelerateEngine(int index) {
-	Car_Array[index].gEngineForce = -Car_Array[index].maxEngineForce;
-	Car_Array[index].gBreakingForce = 0.f;
-	//printf("decelerate \n");
-}
-
-void bt_ARMM_world::turnReset(int index) {
-	Car_Array[index].gVehicleSteering = 0;
-}
-
-void bt_ARMM_world::turnEngineLeft(int index) {
-	Car_Array[index].gVehicleSteering += Car_Array[index].steeringIncrement;
-	if (Car_Array[index].gVehicleSteering > Car_Array[index].steeringClamp)	
-		Car_Array[index].gVehicleSteering = Car_Array[index].steeringClamp;
-	//printf("turn left \n");
-}
-
-void bt_ARMM_world::turnEngineRight(int index) {
-	Car_Array[index].gVehicleSteering -= Car_Array[index].steeringIncrement;
-	if (Car_Array[index].gVehicleSteering < -Car_Array[index].steeringClamp)
-		Car_Array[index].gVehicleSteering = -Car_Array[index].steeringClamp;
-	//printf("turn right \n");
-}
-
-void bt_ARMM_world::resetCarScene(int car_index)
-{
-	//for (int i =0; i < NUMBER_CAR; i++) {
-		Car_Array[car_index].gVehicleSteering = 0.f;
-		Car_Array[car_index].gBreakingForce = Car_Array[car_index].defaultBreakingForce;
-		Car_Array[car_index].gEngineForce = 0.f;
-
-		//m_carChassis->setCenterOfMassTransform(btTransform::getIdentity());
-		m_carChassis.at(car_index)->setCenterOfMassTransform(btTransform(btQuaternion(0,0,0,1),btVector3(20*car_index+500,-5,5)));
-		m_carChassis.at(car_index)->setLinearVelocity(btVector3(0,0,0));
-		m_carChassis.at(car_index)->setAngularVelocity(btVector3(0,0,0));
-		m_dynamicsWorld->getBroadphase()->getOverlappingPairCache()->cleanProxyFromPairs(m_carChassis.at(car_index)->getBroadphaseHandle(),m_dynamicsWorld->getDispatcher());
-		if (m_vehicle.at(car_index))
-		{
-			m_vehicle.at(car_index)->resetSuspension();
-			for (int j=0;j<m_vehicle.at(car_index)->getNumWheels();j++)
-			{
-				//synchronize the wheels with the (interpolated) chassis worldtransform
-				m_vehicle.at(car_index)->updateWheelTransform(j,true);
-			}
-		}
 }
 
 void bt_ARMM_world::setWorldDepth(float w) {

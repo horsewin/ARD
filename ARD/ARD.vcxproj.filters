@@ -92,9 +92,6 @@
     <ClInclude Include="..\src\include\Controls\KeyboardControls.h">
       <Filter>Controls</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\include\Controls\XBoxControls.h">
-      <Filter>Controls</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\include\Network\Communicator.h">
       <Filter>Network</Filter>
     </ClInclude>

@@ -28,34 +28,6 @@
 #include "UserConstant.h"
 #include "ARMM\Rendering\osg_Menu.h"
 
-struct Car{
-	float	chassis_width;
-	float	chassis_height;
-	float	chassis_length;
-	float	car_mass;
-	float	gEngineForce;
-	float	gBreakingForce;
-	float	maxEngineForce;
-	float	maxBreakingForce;
-	float	defaultBreakingForce;
-	float	gVehicleSteering;
-	float	steeringIncrement;
-	float	steeringClamp;
-	float	wheelRadius;
-	float	wheelWidth;
-	float	wheelFriction;
-	float	suspensionStiffness;
-	float	suspensionDamping;
-	float	suspensionCompression;
-	float	rollInfluence;
-	float	chassisDistFromGround;
-	float	connectionHeight;
-	float	wheelLengthOffsetFront;
-	float	wheelLengthOffsetBack;
-	float	wheelWidthOffsetFront;
-	float	wheelWidthOffsetBack;
-};
-
 class btBroadphaseInterface;
 class btOverlappingPairCache;
 class btCollisionDispatcher;
@@ -108,13 +80,6 @@ public:
 
 		btVector3*	m_vertices;
 
-		std::vector< boost::shared_ptr<btDefaultMotionState> >	chassisMotionState;
-		std::vector< boost::shared_ptr<btRigidBody> >			m_carChassis;
-		btRaycastVehicle::btVehicleTuning						m_tuning[NUM_CARS];
-		std::vector< boost::shared_ptr<btVehicleRaycaster> >	m_vehicleRayCaster;
-		std::vector< boost::shared_ptr<btRaycastVehicle> >		m_vehicle;
-		std::vector< boost::shared_ptr<btCollisionShape> >		m_wheelShape;
-
 		btClock m_clock;
 
 		btSoftBody* textureSoftBody;
@@ -126,18 +91,8 @@ public:
 
 		void initPhysics();
 
-		void setCarMovement();
-		btTransform getCarPose(int index);
-		btTransform getWheelTransform(int carIndex, int wheelInt);
 		float* Quaternion2RotMat3x3(btScalar x, btScalar y, btScalar z, btScalar w);
 		btScalar virtual getDeltaTimeMicroseconds();
-		void resetEngineForce(int index);
-		void accelerateEngine(int index);
-		void decelerateEngine(int index);
-		void turnReset(int index);
-		void turnEngineLeft(int index);
-		void turnEngineRight(int index);
-		void resetCarScene(int car_index);
 		void setWorldDepth(float w);
 		//
 		float getGridHeight(float* grid, int i, int j);
@@ -214,10 +169,6 @@ public:
 		int upIndex;
 		int forwardIndex;
 		//
-		btVector3 wheelDirectionCS0[NUM_CARS];
-		btVector3 wheelAxleCS[NUM_CARS];
-		btScalar suspensionRestLength[NUM_CARS];
-		Car Car_Array[NUM_CARS];
 		float	worldDepth;
 		float	world_scale;
 

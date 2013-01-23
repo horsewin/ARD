@@ -82,46 +82,11 @@ int KeyboardController::check_input(boost::shared_ptr<osg_Root> osgRoot, bt_ARMM
 	//key offset to use key assignment info
 	const int offset = 79;
 
-#if CAR_SIMULATION == 1
-	//Car Number 1
-	if (getKey(VK_UP)) {
-		world->accelerateEngine(0);
-	} else if (getKey(VK_DOWN)) {
-		world->decelerateEngine(0);
-	} else {
-		world->resetEngineForce(0);
-	}
-	if (getKey(VK_LEFT)) {
-		world->turnEngineLeft(0);
-	} else if (getKey(VK_RIGHT)) {
-		world->turnEngineRight(0);
-	} else {
-			world->turnReset(0);
-	}
-	//Car Number 2
-	if (getKey(87)) {//W
-		world->accelerateEngine(1);
-	} else if (getKey(83)) {//S
-		world->decelerateEngine(1);
-	} else {
-		world->resetEngineForce(1);
-	}
-	if (getKey(65)) {//A
-		world->turnEngineLeft(1);
-	} else if (getKey(68)) {//D
-		world->turnEngineRight(1);
-	} else {
-		world->turnReset(1);
-	}
-#endif /* CAR_SIMULATION == 1 */
-
 	//A 65 S 83 D 68 W 87 F 70 V 86
-	if (getKey(VK_ESCAPE)) running = false;
-#ifdef SIM_MICROMACHINE
-	if (getKey(82)) world->resetCarScene(0); //R
-	if (getKey(84)) world->resetCarScene(1); //T
-#endif /*SIM_MICROMACHINE*/
-
+	if (getKey(VK_ESCAPE)){
+		running = false;
+		exit(EXIT_SUCCESS);
+	}
 	//about height field
 	if (getKey(86)) { //V
 		WIREFRAME_MODE = !WIREFRAME_MODE;

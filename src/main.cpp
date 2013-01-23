@@ -539,24 +539,6 @@ void RenderScene(IplImage *arImage, Capture *capture)
 	float scale = 10;
 	osg::Vec3d worldVec;
 
-#if CAR_SIMULATION == 1
-	for(int i = 0; i < NUM_CARS; i++) 
-	{
-		//get cars position and orientation
-		btTransform trans = m_world->getCarPose(i);
-		btQuaternion quat = trans.getRotation();
-		CarsOrientation[i] = osg::Quat(quat.getX(), quat.getY(), quat.getZ(), quat.getW()); 
-		CarsPosition[i]	   = osg::Vec3d(trans.getOrigin().getX()*scale, trans.getOrigin().getY()*scale,trans.getOrigin().getZ()*scale);
-		//get wheels of each car position and orientation
-		for(int j = 0; j < 4; j++) {
-			btTransform trans_tmp = m_world->getWheelTransform(i,j);
-			btQuaternion quattmp = trans_tmp.getRotation();
-			WheelsOrientaion[i][j] = osg::Quat(quattmp.getX(), quattmp.getY(), quattmp.getZ(), quattmp.getW()); 	
-			WheelsPosition[i][j] = osg::Vec3d(trans_tmp.getOrigin().getX()*scale, trans_tmp.getOrigin().getY()*scale,trans_tmp.getOrigin().getZ()*scale);
-		}
-	}
-#endif /* CAR_SIMULATION == 1 */
-
 	std::vector <osg::Quat> quat_obj_array;
 	std::vector <osg::Vec3d> vect_obj_array;
 
@@ -679,13 +661,6 @@ void loadKinectTransform(char *filename)
 			m_world->setMinHeight(MinHeight);
 			m_world->setMaxHeight(MaxHeight);
 			m_world->initPhysics();
-#ifdef SIM_PARTICLES
-			CreateOSGSphereProxy();//osg spheres representation
-#endif
-#ifdef SIM_MICROMACHINE
-			m_world->resetCarScene(0);
-			m_world->resetCarScene(1);
-#endif /*SIM_MICROMACHINE*/
 		}
 	}
 }
@@ -844,15 +819,18 @@ void registerMarker()
 		printf("Reloaded Marker Size = %d\n", markerSize.width);
 		//Set OSG Menu
 
-		//Recreat world and controls
-		delete kc;
+		//In original ARMM, this code is uncommented out---> 
+		//However, some segmentation faults cannot be removed, so i commented it out at the moment
+		////Recreat world and controls
+		//delete kc;
 
-		//delete xc;
-		delete m_world;
+		////delete xc;
+		//delete m_world;
 
-		m_world = new bt_ARMM_world();
-		kc = new KeyboardController();
+		//m_world = new bt_ARMM_world();
+		//kc = new KeyboardController();
 		//xc = new XboxController(m_world);
+		//<-----
 
 		m_world->setWorldDepth(MARKER_DEPTH);
 		m_world->setWorldScale(WORLD_SCALE);
@@ -865,13 +843,14 @@ void registerMarker()
 		m_world->updateTrimesh(ground_grid);
 		m_world->setMinHeight(MinHeight);
 		m_world->setMaxHeight(MaxHeight);
-		m_world->initPhysics();
 
-#ifdef SIM_MICROMACHINE
-		m_world->resetCarScene(0);
-		m_world->resetCarScene(1);
-#endif /*SIM_MICROMACHINE*/
-	} else {
+		//----->
+		//m_world->initPhysics();
+		//<-----
+
+	}
+	else
+	{
 		printf("Couldn't find marker, please try again!\n");
 	}
 }
