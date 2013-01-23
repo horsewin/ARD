@@ -123,6 +123,7 @@ void getConnectedComponents(IplImage *mask, int poly1_hull0, float perimScale, i
 }
 
 HandRegion::HandRegion(void)
+
 {
 	_pImage = 0;
 }

@@ -915,7 +915,7 @@ void FindHands(IplImage *depthIm, IplImage *colourIm)
 	cvSet(colourImResized, cvScalar(0), depthTmp);
 	cvResize(colourImResized, colourIm640, CV_INTER_NN);
 
-  //----->Segment skin color
+	//----->Segment skin color
 	cont_num = MAX_NUM_HANDS;//up to MAX_NUM_HANDS contours
 	cvCopyImage( _HandRegion.GetHandRegion( colourImResized, &cont_num,cont_boundbox, cont_boundbox2D, cont_center), depthTmp);
 	cvThreshold(depthTmp, depthTmp, 0, 255, CV_THRESH_BINARY_INV);	
@@ -926,9 +926,6 @@ void FindHands(IplImage *depthIm, IplImage *colourIm)
   //----->Display image
 	IplImage* colourIm160 = cvCreateImage( cvSize(ARMM::ConstParams::SKIN_X, ARMM::ConstParams::SKIN_Y), IPL_DEPTH_8U, 3);
 	cvCopyImage(colourImResized,colourIm160);
-	#ifdef USE_OPTICAL_FLOW
-	cvCvtColor(colourIm160, curr_gray, CV_BGR2GRAY);
-	#endif
 
 	//----->Draw center of contour
 	float *center_depth; 
@@ -940,8 +937,10 @@ void FindHands(IplImage *depthIm, IplImage *colourIm)
 	float skin_ratio = ARMM::ConstParams::SKIN_X / MESH_SIZE.width;
 	assert( fabs( (ARMM::ConstParams::SKIN_Y / MESH_SIZE.height) - skin_ratio ) < 0.1); 
 
+	// the corner of the bounding box
 	CvPoint upperLeft = cvPoint(0,0);
 	CvPoint bottomRight = cvPoint(0,0);
+
 	REP(i,num_hand_in_scene)
 	{
 		center_depth[i] = CV_IMAGE_ELEM(transDepth320, float, cont_center.at(i).y, cont_center.at(i).x);
@@ -961,9 +960,9 @@ void FindHands(IplImage *depthIm, IplImage *colourIm)
 
 		//----->Sort all the points using nearest neighbor
 	
-	//temporary test 1 hand
-	//----->Copy height info to grid and display
-	//				for(int i = 0; i < num_hand_in_scene; i++) {
+		//temporary test 1 hand
+		//----->Copy height info to grid and display
+		//				for(int i = 0; i < num_hand_in_scene; i++) {
 		IplImage* depth11	= cvCreateImage(cvSize(MIN_HAND_PIX, MIN_HAND_PIX), IPL_DEPTH_32F, 1);
 		IplImage* depth11_2 = cvCreateImage(cvSize(MIN_HAND_PIX, MIN_HAND_PIX), IPL_DEPTH_32F, 1);
 
@@ -974,13 +973,12 @@ void FindHands(IplImage *depthIm, IplImage *colourIm)
 
 		//int resize_ratio_x = SKIN_SEGM_SIZE.width / MIN_HAND_PIX;
 		//int resize_ratio_y = SKIN_SEGM_SIZE.height/ MIN_HAND_PIX;
-		int depth_offset = 0.0; //depth offset
 		for(int j = 0; j < MIN_HAND_PIX; j++)
 		{
 			for(int k = 0; k < MIN_HAND_PIX; k++) 
 			{
 				int ind = j * MIN_HAND_PIX + k;
-				hand_depth_grids[i][ind] = CV_IMAGE_ELEM(depth11, float, ((int)MIN_HAND_PIX-1)-k, j) - depth_offset ;
+				hand_depth_grids[i][ind] = CV_IMAGE_ELEM(depth11, float, ((int)MIN_HAND_PIX-1)-k, j);
 			}
 		}
 
@@ -1072,6 +1070,7 @@ void FindHands(IplImage *depthIm, IplImage *colourIm)
 					fingerIndex.push_back( dx*MIN_HAND_PIX + (MIN_HAND_PIX-1)-dy);
 				}
 			}
+
 #ifdef SHOWSEGMENTATION
 			cvCircle(col_640, fingerTips[i][j] , 10, cv::Scalar(255,255,0), 4);
 #endif
@@ -1082,6 +1081,7 @@ void FindHands(IplImage *depthIm, IplImage *colourIm)
 	//cout << "Finger=" << fingerIndex.size() << endl;
 	//<--(FINGERTIPS DETECTION) end
 	//TickCountAverageEnd();
+
 #ifdef SHOWSEGMENTATION
 	cvShowImage("Op_Flow_640",col_640);
 	cvShowImage("transcolor",transColor320);
@@ -1089,6 +1089,7 @@ void FindHands(IplImage *depthIm, IplImage *colourIm)
 
 	//memory release
 	delete center_depth;
+
 	cvReleaseImage(&col_640);
 	cvReleaseImage(&colourIm160);
 	cvReleaseImage(&depthTmp);

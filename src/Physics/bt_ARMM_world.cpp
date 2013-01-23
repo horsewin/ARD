@@ -421,7 +421,6 @@ namespace{
 }
 
 
-
 //---------------------------------------------------------------------------
 // Code	
 //---------------------------------------------------------------------------
@@ -501,9 +500,9 @@ bt_ARMM_world::bt_ARMM_world(void)
 	Car_Array[1].chassisDistFromGround = 1.3f;
 	Car_Array[1].connectionHeight = 1.2f;
 	Car_Array[1].wheelLengthOffsetFront = 1.1f;
-	Car_Array[1].wheelLengthOffsetBack = 1.2f;
-	Car_Array[1].wheelWidthOffsetFront = 1.3f;
-	Car_Array[1].wheelWidthOffsetBack = 1.2f;
+	Car_Array[1].wheelLengthOffsetBack	= 1.2f;
+	Car_Array[1].wheelWidthOffsetFront	= 1.3f;
+	Car_Array[1].wheelWidthOffsetBack	= 1.2f;
 
 #endif /* CAR_SIMULATION == 1*/
 
@@ -516,23 +515,26 @@ bt_ARMM_world::bt_ARMM_world(void)
 	ResetARButtonInput();
 }
 
-bt_ARMM_world::~bt_ARMM_world(void) { //cleanup in the reverse order of creation/initialization
+//cleanup in the reverse order of creation/initialization
+bt_ARMM_world::~bt_ARMM_world(void)
+{ 
 	//remove the rigidbodies from the dynamics world and delete them
 	if (hasInit)
 	{
 		for (int i=m_dynamicsWorld->getNumCollisionObjects()-1; i>=0 ;i--) 
 		{
 			btCollisionObject* obj = m_dynamicsWorld->getCollisionObjectArray()[i];
+			
+
 			btRigidBody* body = btRigidBody::upcast(obj);
-			if (body && body->getMotionState()) {
+			if (body && body->getMotionState() ) 
+			{
 				delete body->getMotionState();
 			}
 			m_dynamicsWorld->removeCollisionObject( obj );
 			delete obj;
 		}
-#ifdef SIM_MICROMACHINE
-		chassisMotionState.clear();
-#endif /*SIM_MICROMACHINE*/
+
 		//delete collision shapes
 		for (int j=0;j<m_collisionShapes.size();j++) 
 		{
@@ -548,13 +550,21 @@ bt_ARMM_world::~bt_ARMM_world(void) { //cleanup in the reverse order of creation
 		delete m_indexVertexArrays;
 		delete m_vertices;
 		delete m_dynamicsWorld;
+
 #if CAR_SIMULATION == 1
-		chassisMotionState.clear();
+		if(!chassisMotionState.empty())
+		{
+			std::cout << chassisMotionState.size() << std::endl;
+			//chassisMotionState.clear();
+		}else{
+			std::cerr << "chassisMotionState vector is empty!!" << std::endl;
+		}
 		m_carChassis.clear();
 		m_vehicleRayCaster.clear();
 		m_vehicle.clear();
 		m_wheelShape.clear();
 #endif /*SIM_MICROMACHINE*/
+
 		delete m_constraintSolver;
 		delete m_overlappingPairCache; //delete broadphase
 		delete m_dispatcher; //delete dispatcher

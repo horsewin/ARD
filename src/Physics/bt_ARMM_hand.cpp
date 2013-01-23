@@ -34,8 +34,10 @@ bt_ARMM_hand::bt_ARMM_hand(btDiscreteDynamicsWorld* m_dynamicsWorld, btAlignedOb
 	handSphereMotionState.reserve(num_sphere_total);
 	handSphereRigidBody.reserve(num_sphere_total);
 
-	for(int i = 0; i < num_sphere_y; i++) {
-		for(int j = 0; j < num_sphere_x; j++) {
+	for(int i = 0; i < num_sphere_y; i++) 
+	{
+		for(int j = 0; j < num_sphere_x; j++) 
+		{
 			int index = i*num_sphere_x + j;
 			float x = (global_x+i*world_scale_hand);
 			float y = (global_y+j*world_scale_hand);
@@ -52,7 +54,8 @@ bt_ARMM_hand::bt_ARMM_hand(btDiscreteDynamicsWorld* m_dynamicsWorld, btAlignedOb
 
 			//handSphereRigidBody.at(index)->setCenterOfMassTransform(btTransform(btQuaternion(0,0,0,1),btVector3(x, y, 1)));
 			//assign sphere as kinematics
-			if(handSphereRigidBody.at(index)->getCollisionFlags() != 0 ) {
+			if(handSphereRigidBody.at(index)->getCollisionFlags() != 0 ) 
+			{
 				handSphereRigidBody.at(index)->setCollisionFlags( handSphereRigidBody.at(index)->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);//2
 				handSphereRigidBody.at(index)->setActivationState(DISABLE_DEACTIVATION);//4	
 			}
