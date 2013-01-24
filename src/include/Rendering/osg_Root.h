@@ -96,11 +96,16 @@ public:
 		else s->setAllChildrenOff();
 	}
 
-	void processFrame(IplImage *mFrame, CvMat *cParams, CvMat *cDistort) {
-		for (MarkerMap::iterator iter = mMarkers.begin(); iter != mMarkers.end(); iter++) {
-			osg::ref_ptr<osg::Switch> s = (osg::Switch*)iter->second->getChild(0); s.get()->setAllChildrenOff();
+	void processFrame(IplImage *mFrame, CvMat *cParams, CvMat *cDistort) 
+	{
+		for (MarkerMap::iterator iter = mMarkers.begin(); iter != mMarkers.end(); iter++) 
+		{
+			osg::ref_ptr<osg::Switch> s = 
+				(osg::Switch*)iter->second->getChild(0); s.get()->setAllChildrenOff();
 		}
+
 		std::vector<MarkerTransform> mTransforms = r->performRegistration(mFrame, cParams, cDistort);
+
 		for (std::vector<MarkerTransform>::iterator iter = mTransforms.begin(); iter != mTransforms.end(); iter++) {
 			MarkerMap::iterator mIter = mMarkers.find(iter->marker.name);
 			if (mIter != mMarkers.end()) {
@@ -201,8 +206,11 @@ public:
 	void osg_uninit();
 	void osg_inittracker(std::string markerName, int maxLengthSize, int maxLengthScale);
 
-	//update rendering window
-	void osg_render(IplImage *newFrame, osg::Quat *q,osg::Vec3d  *v, osg::Quat wq[][4], osg::Vec3d wv[][4], CvMat *cParams, CvMat *cDistort, std::vector <osg::Quat> q_array, std::vector<osg::Vec3d>  v_array);
+	//update
+	void osg_update(std::vector <osg::Quat> q_array, std::vector<osg::Vec3d>  v_array);
+
+	//rendering window
+	void osg_render(IplImage *newFrame, CvMat *cParams, CvMat *cDistort);
 
 	//set ground parameter
 	void osg_UpdateHeightfieldTrimesh(float *ground_grid);

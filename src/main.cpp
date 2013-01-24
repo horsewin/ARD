@@ -116,14 +116,6 @@ std::vector <CvRect>	cont_boundbox;
 std::vector <CvBox2D>	cont_boundbox2D; 
 std::vector <CvPoint>	cont_center;
 
-#if CAR_SIMULATION == 1
-//Graphical objects
-osg::Quat CarsOrientation[NUM_CARS];
-osg::Quat WheelsOrientaion[NUM_CARS][NUM_WHEELS];
-osg::Vec3d CarsPosition[NUM_CARS];
-osg::Vec3d WheelsPosition[NUM_CARS][NUM_WHEELS];
-#endif /* CAR_SIMULATION == 1 */
-
 int input_key;
 bool panelCollisionLock;	//for mutual exclusion of panel input
 panelinput panelInput;
@@ -189,7 +181,7 @@ void AssignPhysics2Osgmenu();
 void ResetTextureTransferMode();
 void ExecuteAction(const int & val);
 void CheckerArInput();
-int	 CheckerArModelButtonType();
+int	 CheckerArModelButtonType(const int & v);
 
 double cal_mean();
 double cal_std(double mean);
@@ -415,6 +407,7 @@ int main(int argc, char* argv[])
 #endif
 		IplImage *arImage = capture->getFrame();
 		cvWaitKey(1); 
+		//TickCountAverageBegin();
 
 		//check input device
 		input_key = kc->check_input(pOsgRoot, m_world);
@@ -464,7 +457,7 @@ int main(int argc, char* argv[])
 #if USE_OSGMENU == 1
 			//(3) Checker for AR button input
 			CheckerArInput();
-			input_key = CheckerArModelButtonType();
+			input_key = CheckerArModelButtonType(input_key);
 #endif
 
 			//do hand pose recognition
@@ -506,11 +499,6 @@ int main(int argc, char* argv[])
 	//TickCountAverageEnd();
 #endif
 
-#ifdef USE_OPTICAL_FLOW
-		if(!RunOnce) RunOnce = true;
-		cvCopyImage(curr_gray, prev_gray);
-#endif
-
 		cvReleaseImage(&arImage);
 		cvReleaseImage(&depthIm); 
 		cvReleaseImage(&colourIm);
@@ -520,9 +508,6 @@ int main(int argc, char* argv[])
 		cvReleaseImage(&transColor320);
 #endif
 	}
-#ifdef USE_OPTICAL_FLOW
-	cvReleaseImage(&prev_gray); cvReleaseImage(&curr_gray);
-#endif
 
 	//memory release
 	delete m_world;
@@ -582,21 +567,13 @@ void RenderScene(IplImage *arImage, Capture *capture)
 			//	//printf("(%d)%f,%f,%f -- %f,%f,%f\n",obj_node_array.size(),localVec.x(), localVec.y(), localVec.z(), vect_obj_array[0].x(), vect_obj_array[0].y(), vect_obj_array[0].z());
 			//}
 		}
-#if CAR_SIMULATION == 1
-		pOsgRoot->osg_render(arImage, CarsOrientation, CarsPosition, WheelsOrientaion, WheelsPosition, RegistrationParams, capture->getDistortion(), quat_obj_array, vect_obj_array);
-#else 
-		pOsgRoot->osg_render(arImage, NULL, NULL, NULL, NULL, RegistrationParams, capture->getDistortion(), quat_obj_array, vect_obj_array);
-#endif /* CAR_SIMULATION == 1 */
 	} 
-
 	else // Virtual_Objects_Count <= 0
-	{
-#if CAR_SIMULATION == 1
-		pOsgRoot->osg_render(arImage, CarsOrientation, CarsPosition, WheelsOrientaion, WheelsPosition, RegistrationParams, capture->getDistortion(), quat_obj_array, vect_obj_array);
-#else 
-		osg_render(arImage, NULL, NULL, NULL, NULL, RegistrationParams, capture->getDistortion(), quat_obj_array, vect_obj_array);
-#endif /* CAR_SIMULATION == 1 */
-	}
+	{}
+
+	pOsgRoot->osg_update(quat_obj_array, vect_obj_array);
+	
+	pOsgRoot->osg_render(arImage, RegistrationParams, capture->getDistortion());
 }
 
 
@@ -1138,7 +1115,7 @@ void DetectFingertips(cv::Ptr<IplImage> handMask,
 			int approxPointer = 0;
 			REP(i,hullShape.size())
 			{
-				for(;approxPointer<approxCurve.size();approxPointer++)
+				for(;approxPointer<static_cast<int>(approxCurve.size());approxPointer++)
 				{
 					if(hullShape[i] == approxCurve[approxPointer]){
 						hull.push_back(approxPointer);
@@ -1306,7 +1283,7 @@ void CheckerArInput()
 	}
 }
 
-int CheckerArModelButtonType()
+int CheckerArModelButtonType(const int & v)
 {
 	if(gOsgArAddModelIndex > 0)
 	{
@@ -1340,9 +1317,11 @@ int CheckerArModelButtonType()
 		pOsgRoot->ResetArModelButtonType();
 		gOsgArInputButton = -1;		
 		m_world->ResetARButtonInput();
+
+		return val;
 	}
 
-	return 0;
+	return v;
 }
 
 void ExecuteAction(const int & val)

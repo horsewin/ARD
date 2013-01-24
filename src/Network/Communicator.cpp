@@ -11,12 +11,6 @@
 //---------------------------------------------------------------------------
 // Global
 //---------------------------------------------------------------------------
-#if CAR_SIMULATION == 1
-extern osg::Quat CarsOrientation[NUM_CARS];
-extern osg::Quat WheelsOrientaion[NUM_CARS][NUM_WHEELS];
-extern osg::Vec3d CarsPosition[NUM_CARS];
-extern osg::Vec3d WheelsPosition[NUM_CARS][NUM_WHEELS];
-#endif /* CAR_SIMULATION == 1 */
 
 extern int input_key;
 
@@ -42,7 +36,7 @@ const int HANDS_BUFFER = 3000;
 ARMM_Communicator::ARMM_Communicator( vrpn_Connection_IP *c) :
 vrpn_Tracker( "ARMM_Comm", c ) 
 {
-	num_sensors = NUM_CARS*NUM_WHEELS+NUM_CARS;
+	num_sensors = 0;
 	register_types();
 
 	// initialize the hand position
@@ -71,8 +65,8 @@ int ARMM_Communicator::register_types(void)
 //Atsushi
 int	ARMM_Communicator::encode_hand_to(char *buf, int division)
 {
-	char *bufptr = buf;
-	int  buflen =	HANDS_BUFFER;
+	char *bufptr=	buf;
+	int  buflen	=	HANDS_BUFFER;
 
 	// Message includes: long sensor, long scrap, vrpn_float64 pos[3], vrpn_float64 quat[4]
 	// Byte order of each needs to be reversed to match network standard
@@ -120,7 +114,7 @@ void ARMM_Communicator::mainloop()
 	if( mDataType == REGULAR)
 	{
 		//----->Set the number of sending data
-		const int CAR_PARAM       = NUM_CARS*NUM_WHEELS+NUM_CARS;
+		const int CAR_PARAM       = 0;
 		const int COLLISION_PARAM = CAR_PARAM + 1;  
 		const int object_num = static_cast<vrpn_int32>( (*m_objects_body).size() ); 
 		int hands_num  = (*m_hands_body).size();
@@ -144,46 +138,17 @@ void ARMM_Communicator::mainloop()
 			num_sensors += object_num;
 		}
 
-		//----->Send cars info first
+		//
 		REP(i,num_sensors+1)
 		{
 			vrpn_gettimeofday(&_timestamp, NULL);
 			vrpn_Tracker::timestamp = _timestamp;
 			d_sensor = i;
-			if( i < CAR_PARAM)
-			{
-#if CAR_SIMULATION == 1
-				// pos and orientation of cars
-				if(i % 5 == 0)
-				{
-					int j = (int) i / 5;
-					pos[0] = (vrpn_float64) CarsPosition[j].x(); 
-					pos[1] = (vrpn_float64) CarsPosition[j].y(); 
-					pos[2] = (vrpn_float64) CarsPosition[j].z(); 
-					d_quat[0] = (vrpn_float64) CarsOrientation[j].x();
-					d_quat[1] = (vrpn_float64) CarsOrientation[j].y();
-					d_quat[2] = (vrpn_float64) CarsOrientation[j].z();
-					d_quat[3] = (vrpn_float64) CarsOrientation[j].w();
-				} 
-				//pos and orientation of car's wheels
-				else 
-				{ 
-					int j = (int) floor((float) i/5);
-					int k = (i % 5) -1;
-					pos[0] = (vrpn_float64) WheelsPosition[j][k].x(); 
-					pos[1] = (vrpn_float64) WheelsPosition[j][k].y(); 
-					pos[2] = (vrpn_float64) WheelsPosition[j][k].z();
-					d_quat[0] = (vrpn_float64) WheelsOrientaion[j][k].x();
-					d_quat[1] = (vrpn_float64) WheelsOrientaion[j][k].y();
-					d_quat[2] = (vrpn_float64) WheelsOrientaion[j][k].z();
-					d_quat[3] = (vrpn_float64) WheelsOrientaion[j][k].w();
-				}
-#endif /* CAR_SIMULATION == 1 */
-			}		
 			//----->Keyboard input checker
-			else if( i == CAR_PARAM)
+			if( i == CAR_PARAM)
 			{
 				pos[0] = (vrpn_float64)input_key;
+				//printf("mpass=%d\n",input_key);
 			}
 			//----->Send collisioninfo
 			else if( i > CAR_PARAM && i <= COLLISION_PARAM)

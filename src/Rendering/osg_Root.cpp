@@ -142,9 +142,9 @@ void osg_Root::osg_uninit()
 
 void osg_Root::osg_inittracker(string markerName, int maxLengthSize, int maxLengthScale) 
 {
-	static bool hasInit = false;
+	static bool bOsgInit = false;
 
-	if (hasInit) {
+	if (bOsgInit) {
 		arTrackedNode->removeChildren(0,arTrackedNode->getNumChildren());
 		celicaIndex = arTrackedNode->addMarkerContent(markerName, maxLengthSize, maxLengthScale, mShadowedScene);
 		arTrackedNode->setVisible(celicaIndex, true);
@@ -176,20 +176,6 @@ void osg_Root::osg_inittracker(string markerName, int maxLengthSize, int maxLeng
 	mShadowedScene->addChild(source);
 
 	//<-----
-
-#if CAR_SIMULATION == 1
-	mOsgInit->CreateCarUnit(mOsgObject);
-
-	//Add these cars to rendering scene
-	mShadowedScene->addChild( mOsgObject->car_transform.at(0) );
-	mShadowedScene->addChild( mOsgObject->car_transform.at(1) );
-
-	for(int i = 0 ; i < 2; i++)  { 
-		for(int j = 0 ; j < 4; j++)  { 
-			mShadowedScene->addChild(mOsgObject->wheel_transform[i].at(j));
-		}
-	} 
-#endif /* CAR_SIMULATION == 1 */
 
 	celicaIndex = arTrackedNode->addMarkerContent(markerName, maxLengthSize, maxLengthScale, mShadowedScene);
 	arTrackedNode->setVisible(celicaIndex, true);
@@ -227,13 +213,9 @@ void osg_Root::osg_inittracker(string markerName, int maxLengthSize, int maxLeng
 		arTrackedNode->addModel(mt);
 		mShadowedScene->addChild(mt);
 
-#if CAR_SIMULATION == 1
-		mOsgInit->SetCarRenderBin(mOsgObject);
-#endif
-
 	}/*Adrian*/
 
-	hasInit = true;
+	bOsgInit = true;
 
 	/* DEBUG code */
 	//for confirmation about the direction of axis
@@ -249,7 +231,14 @@ void osg_Root::osg_inittracker(string markerName, int maxLengthSize, int maxLeng
 #endif
 }
 
-void osg_Root::osg_render(IplImage *newFrame, osg::Quat *q,osg::Vec3d  *v, osg::Quat wq[][4], osg::Vec3d wv[][4], CvMat *cParams, CvMat *cDistort, std::vector <osg::Quat> q_array, std::vector<osg::Vec3d>  v_array) 
+void osg_Root::osg_update(std::vector <osg::Quat> q_array, std::vector<osg::Vec3d>  v_array)
+{
+#if USE_ARMM_SERVER_VIEW == 1
+	mOsgUpdater->UpdateObjects(mOsgObject, q_array, v_array);	
+#endif
+}
+
+void osg_Root::osg_render(IplImage *newFrame, CvMat *cParams, CvMat *cDistort) 
 {
 	if(mAddModelAnimation >0.001 || mAddModelAnimation < -0.001) //means "!= 0.0"
 	{
@@ -261,28 +250,6 @@ void osg_Root::osg_render(IplImage *newFrame, osg::Quat *q,osg::Vec3d  *v, osg::
 	mVideoImage->setImage(mGLImage->width, mGLImage->height, 0, 3, GL_RGB, GL_UNSIGNED_BYTE, (unsigned char*)mGLImage->imageData, osg::Image::NO_DELETE);
 
 #ifdef USE_ARMM_SERVER_VIEW
-#if CAR_SIMULATION == 1
-	if(car_transform.at(0) && car_transform.at(1)) {
-		for(int i = 0; i < 2; i++) {
-			car_transform.at(i)->setAttitude(q[i]);
-			car_transform.at(i)->setPosition(v[i]);
-			for(int j = 0; j < 4; j++) {
-				wheel_transform[i].at(j)->setAttitude(wq[i][j]);
-				wheel_transform[i].at(j)->setPosition(wv[i][j]);
-			}
-		}
-	}
-#endif /* CAR_SIMULATION == 1 */
-
-	//update the position of each virtual object
-	for(unsigned int i = 0; i < q_array.size(); i++) 
-	{
-		obj_transform_array.at(i)->setAttitude(q_array.at(i));
-		obj_transform_array.at(i)->setPosition(v_array.at(i));
-		osg::Vec3 pos = obj_transform_array.at(i)->getPosition();
-		//printf("%d,%s:%.2f  %.2f  %.2f \n", i, obj_node_array.at(i)->getName().c_str(), v_array.at(i).x(), v_array.at(i).y(), v_array.at(i).z());
-		//printf("POS=(%.2f, %.2f, %.2f)\n",pos.x(), pos.y(), pos.z());
-	}
 
 	if (!mViewer.done()) 
 	{

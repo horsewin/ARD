@@ -215,7 +215,6 @@ void osg_geom::osgAddObjectNode(osg::ref_ptr<osgShadow::ShadowedScene> shadowedS
 	shadowedScene->getOrCreateStateSet()->setRenderBinDetails(1, "RenderBin");
 
 	osgObject->IncrementObjIndex();
-	osgObject->IncrementObjCount();
 
 	osgObject->setObjTransformArray(pTransArray);
 }

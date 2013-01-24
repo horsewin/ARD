@@ -10,21 +10,13 @@
 
 osg_Object::osg_Object()
 {
-
+	Virtual_Objects_Count = 0;
 }
 
 osg_Object::~osg_Object()
 {
 	obj_node_array.clear();
 	obj_transform_array.clear();
-
-#if CAR_SIMULATION == 1
-	car_transform.clear();
-	REP(i,NUM_CARS)
-	{
-		wheel_transform[i].clear();
-	}
-#endif /* CAR_SIMULATION == 1 */
 
 	hand_object_array.clear();
 	hand_object_global_array.clear();

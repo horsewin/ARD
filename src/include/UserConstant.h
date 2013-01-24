@@ -3,9 +3,8 @@
 
 //***************** Macro for preprocessor of if-def ********************/
 #define SIM_MICROMACHINE 1
-#define CAR_SIMULATION 1
 #define USE_ARMM_VRPN 1
-//#define USE_ARMM_SERVER_VIEW
+//#define USE_ARMM_SERVER_VIEW 1
 //#define USE_ARMM_VRPN_RECEIVER 1
 #define USE_SKIN_SEGMENTATION 1
 //#define USE_OPTICAL_FLOW 1 
@@ -43,15 +42,6 @@ enum panelinput{NOTHING, ADDARMODEL, SPHERE, CAR1, CAR2, REGENERATE};
 #define CV_BLUE cvScalar(0,0,255)
 #define CV_WHITE cvScalar(255,255,255)
 
-//for car simulation
-#if CAR_SIMULATION == 1
-	enum{NUM_CARS = 2};
-	enum{NUM_WHEELS = 4};
-#else
-	enum{NUM_CARS = 0};
-	enum{NUM_WHEELS = 0};
-#endif
-
 //for hand segmentation and representation
 enum{MAX_NUM_HANDS	= 1};
 enum{MIN_HAND_PIX	= 21};
@@ -64,11 +54,6 @@ enum{HAND_SIZE		= HAND_GRID_SIZE};
 #define KINECT_PARAMS_FILENAME		"Data/Cameras/kinect.yml"
 #define KINECT_TRANSFORM_FILENAME	"Data/Cameras/KinectTransform.yml"
 #define KINECT_CONFIG_FILENAME		"Data/Cameras/KinectConfig.xml"
-
-#define CAR1_BODY_FILENAME			"Data/Cars/GT4_body.ive"
-#define CAR1_WHEEL_FILENAME			"Data/Cars/GT4_tire.ive"
-#define CAR2_BODY_FILENAME			"Data/Cars/Murcielago_body.ive"
-#define CAR2_WHEEL_FILENAME			"Data/Cars/Murcielago_tire.ive"
 
 //for VRPN connection
 enum{UDP_LIMITATION = 100};

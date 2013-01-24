@@ -12,6 +12,10 @@
 #include "Rendering\osg_Object.h"
 #include "constant.h"
 
+#include <osg/MatrixTransform>
+
+#include <cassert>
+
 //---------------------------------------------------------------------------
 // Constant/Define
 //---------------------------------------------------------------------------
@@ -26,7 +30,7 @@ namespace
 	template< class T>
 	bool VectorBoundChecker(std::vector<T> v, int idx)
 	{
-		return( v.size() > idx && idx >= 0);
+		return( v.size() > static_cast<unsigned int>(idx) && idx >= 0);
 	}
 }
 
@@ -62,7 +66,7 @@ void osg_Update::UpdateHand(boost::shared_ptr<osg_Object> osgObject, int index, 
 				osgObject->hand_object_transform_array[index].at(curr)->setPosition(osg::Vec3d(x[curr]*ARMM::ConstParams::SPHERE_SCALE, y[curr]*ARMM::ConstParams::SPHERE_SCALE, grid[curr]*DEPTH_SCALE));
 
 				//printf("Pos, sensor %d = %f, %f, %f\n", curr, x[curr], y[curr], grid[curr]);
-				pHandObjShapeArray[curr]->setColor(osg::Vec4(0.9451, 0.7333, 0.5765, 1));
+				pHandObjShapeArray[curr]->setColor(osg::Vec4d(0.9451, 0.7333, 0.5765, 1));
 			}
 			else
 			{
@@ -110,4 +114,27 @@ void osg_Update::UpdateHand(boost::shared_ptr<osg_Object> osgObject, int index, 
 	//write back to tmp variables
 	osgObject->setHandObjectGlobalArray(pHandObjGlobalArray);
 	osgObject->setHandObjectShapeArray(pHandObjShapeArray);
+}
+
+void osg_Update::UpdateObjects(boost::shared_ptr<osg_Object> osgObject, std::vector <osg::Quat> q_array, std::vector<osg::Vec3d>  v_array)
+{
+	//create temporary osg contents from osgObject
+	std::vector<osg::ref_ptr<osg::PositionAttitudeTransform> > pObjTransArray = osgObject->getObjTransformArray();
+
+	assert(pObjTransArray.size() == v_array.size());
+	assert(pObjTransArray.size() == q_array.size());
+
+	for(unsigned int i = 0; i < pObjTransArray.size(); i++) 
+	{
+		pObjTransArray.at(i)->setAttitude(q_array.at(i));
+		pObjTransArray.at(i)->setPosition(v_array.at(i));
+		////for debug
+		//osg::Vec3 pos = pObjTransArray.at(i)->getPosition();
+		//printf("%d,%s:%.2f  %.2f  %.2f \n", i, obj_node_array.at(i)->getName().c_str(), v_array.at(i).x(), v_array.at(i).y(), v_array.at(i).z());
+		//printf("POS=(%.2f, %.2f, %.2f)\n",pos.x(), pos.y(), pos.z());
+	}
+
+	//write back to tmp variables
+	osgObject->setObjTransformArray(pObjTransArray);
+
 }

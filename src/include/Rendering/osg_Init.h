@@ -22,9 +22,6 @@ public:
 	void CreateHeightfield(boost::shared_ptr<osg_Object> osgObject);
 	void SetHeightfield(boost::shared_ptr<osg_Object> osgObject);
 
-	//Init of Cars
-	void CreateCarUnit(boost::shared_ptr<osg_Object> osgObject);
-	void SetCarRenderBin(boost::shared_ptr<osg_Object> osgObject);
 };
 
 #endif

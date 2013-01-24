@@ -77,6 +77,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>Opengl32.lib;lib3ds-2_0.lib;cv210.lib;cvaux210.lib;cxcore210.lib;ml210.lib;cxts210.lib;highgui210.lib;opencv_ffmpeg210.lib;openNI.lib;opiralibrary.lib;ocvsurf.lib;videoinput.lib;opiralibrarymt.lib;osg.lib;osgutil.lib;osgga.lib;osgviewer.lib;osgtext.lib;osgdb.lib;osgShadow.lib;openthreads.lib;BulletCollision.lib;BulletDynamics.lib;BulletSoftbody.lib;ConvexDecomposition.lib;LinearMath.lib;OpenGLSupport.lib;vrpn.lib;osgbCollision.lib;osgbDynamics.lib;osgbInteraction.lib;osgwControls.lib;osgwQuery.lib;osgwTools.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>lib;$(LIB3DS)\Release;$(OPENCV_2_1)\lib;$(OPIRA)\lib;$(OPEN_NI_LIB);$(OSG)\lib;$(OSGBULLET_LIBRARIES_DIR);$(OSGWORKS_LIBRARIES);$(BULLET_LIBRARIES_DIR)\Release;$(VRPN)\build\Release</AdditionalLibraryDirectories>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

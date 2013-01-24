@@ -141,13 +141,6 @@ public:
 	osg::ref_ptr<osg::Vec4Array>	mGroundQuadColor;
 	osg::ref_ptr<osg::Vec4Array>	mGroundLineColor;
 
-
-#if CAR_SIMULATION==1
-	//car parameter <CAUTION>not smart solution
-	std::vector<osg::PositionAttitudeTransform*> car_transform;
-	std::vector<osg::PositionAttitudeTransform*> wheel_transform[NUM_CARS];
-#endif
-
 	//TODO this variable should be private
 	std::vector<osg::ref_ptr<osg::PositionAttitudeTransform>> hand_object_transform_array[MAX_NUM_HANDS];
 

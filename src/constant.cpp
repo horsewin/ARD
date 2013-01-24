@@ -14,7 +14,7 @@ namespace ARMM
 	const char * ConstParams::MENUDATADIR = "C:/Users/Frontier2/Dropbox/Lab/MenuDatabase/";
 
 	const float ConstParams::HAND_BOX_CM = 20.f; // 25 cm
-	const float ConstParams::KINECT_PIX_PER_DEPTH = 0.4610778;
+	const double ConstParams::KINECT_PIX_PER_DEPTH = 0.4610778;
 	const int	ConstParams::GRID_SIZE =19200;
 
 	const float ConstParams::SPHERE_SIZE	= 2;
@@ -28,8 +28,7 @@ namespace ARMM
 	//const int HAND_GRID_SIZE = 225;// 15x15
 	const int	ConstParams::NUM_OBJECTS = 10;
 
-	const int ConstParams::CAR_PARAM 		= NUM_CARS*NUM_WHEELS + NUM_CARS;
-	const int ConstParams::COLLISION_PARAM	= ConstParams::CAR_PARAM + 1;
+	const int ConstParams::COLLISION_PARAM	= 1;
 
 	//window size
 	const int ConstParams::WINDOW_WIDTH  = 1280;

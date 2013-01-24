@@ -1098,7 +1098,7 @@ void bt_ARMM_world::updateHandDepth(int index, int hand_x, int hand_y, float cur
 		//１秒経過したかどうか
 		if(time_spent > 1.0)
 		{
-			for(int obj=1;obj<mMenuBody.size();obj++)
+			for(int obj=1;obj<static_cast<int>(mMenuBody.size());obj++)
 			{
 				REP(i, MIN_HAND_PIX*MIN_HAND_PIX)
 				{
@@ -1113,7 +1113,6 @@ void bt_ARMM_world::updateHandDepth(int index, int hand_x, int hand_y, float cur
 				}
 				if(panelCollisionLock)
 				{
-					cout << "Press button" << endl;
 					break;		
 				}
 			}
@@ -1122,7 +1121,7 @@ void bt_ARMM_world::updateHandDepth(int index, int hand_x, int hand_y, float cur
 
 	if(panelCollisionLock && panelInput == ADDARMODEL && selectID == -1)
 	{
-		for(int obj=0;obj<mModelButton.size();obj++)
+		for(int obj=0;obj<static_cast<int>(mModelButton.size());obj++)
 		{
 			REP(i, MIN_HAND_PIX*MIN_HAND_PIX)
 			{
@@ -1192,7 +1191,7 @@ bool bt_ARMM_world::GetSphereRep( void )
 
 void bt_ARMM_world::ChangeAttribute(int x, int y, int z, int index)
 {
-	if( index >= m_objectsBody.size())
+	if( static_cast<unsigned int>(index) >= m_objectsBody.size())
 	{
 		cerr << "Error: Out of range in m_objectsBody array" << endl;
 		cerr << "Error: index = " << index << endl;

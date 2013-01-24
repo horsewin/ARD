@@ -9,7 +9,7 @@ namespace ARMM
 	{
 	public:
 
-		static const float	KINECT_PIX_PER_DEPTH;
+		static const double	KINECT_PIX_PER_DEPTH;
 		static const int	GRID_SIZE;
 
 		static const float SPHERE_SIZE;
@@ -29,7 +29,6 @@ namespace ARMM
 
 		static const int NUM_OBJECTS;
 
-		static const int CAR_PARAM;
 		static const int COLLISION_PARAM;
 
 		//window size
