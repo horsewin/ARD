@@ -10,6 +10,10 @@
 //#define USE_OPTICAL_FLOW 1 
 //#define USE_PARTICLES 1
 #define USE_OSGMENU 1
+#define UPDATE_TRIMESH 1
+#define SIM_FREQUENCY 10
+#define SHOWSEGMENTATION 1
+#define SHOWKINECTIMG 0
 //***********************************************************************/
 
 //***************** Abbreviation of for statement  ********************/
@@ -35,7 +39,7 @@ enum panelinput{NOTHING, ADDARMODEL, SPHERE, CAR1, CAR2, REGENERATE};
 //***************** Global Macro constants********************/
 //for image processing
 #define CAPTURE_SIZE cvSize(640,480)
-#define REGISTRATION_SIZE cvSize(320,240)
+#define REGISTRATION_SIZE cvSize(640,480) //cvSize(320,240)->cvSize(640,480)
 #define MESH_SIZE cvSize(160,120)
 #define CV_RED cvScalar(255,0,0)
 #define CV_GREEN cvScalar(0,255,0)

@@ -87,7 +87,8 @@ bool calcKinectOpenGLTransform(IplImage *colourIm, IplImage* depthIm, CvMat** tr
 		free(markerCorners);
 		//Calculate Kinect to OpenGL Transform
 		{
-			vector <CvPoint3D32f> srcPoints3D, dstPoints3D; vector <CvPoint2D32f> srcPoints2D, dstPoints2D;
+			vector <CvPoint3D32f> srcPoints3D, dstPoints3D; 
+			vector <CvPoint2D32f> srcPoints2D, dstPoints2D;
 			srcPoints2D.resize(50); srcPoints3D.resize(50); dstPoints2D.resize(50); dstPoints3D.resize(50);
 			float xStep = float(markerSize.width)/9.0; float yStep = float(markerSize.height)/4.0;
 			float xStep1 = float(mt.at(0).marker.size.width)/9.0; float yStep1 = float(mt.at(0).marker.size.height)/4.0;
@@ -145,7 +146,6 @@ bool calcKinectOpenGLTransform(IplImage *colourIm, IplImage* depthIm, CvMat** tr
 	for (unsigned int i=0; i<mt.size(); i++) mt.at(i).clear(); mt.clear();
 	return found;
 }
-
 
 float FindMarkerAffineRotation(CvPoint3D32f *markCorn)
 {	

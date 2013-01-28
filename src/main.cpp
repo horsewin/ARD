@@ -33,7 +33,7 @@
 #include "leastsquaresquat.h"
 
 //Transforms
-#include "transforms.h"
+#include "Transforms.h"
 
 //Controller Input
 #include "Controls/KeyboardControls.h"
@@ -61,11 +61,6 @@
 //---------------------------------------------------------------------------
 using namespace std; 
 using namespace xn;
-
-#define UPDATE_TRIMESH 1
-#define SIM_FREQUENCY 10
-#define SHOWSEGMENTATION 1
-#define SHOWKINECTIMG 0
 
 const int MAX_FPS = 100;
 
@@ -110,12 +105,6 @@ float MaxHeight, MinHeight;
 IplImage *colourIm, *depthIm, *prev_gray, *curr_gray ,*transDepth160, *transDepth320, *transColor320;
 IplImage *depthmask_for_mesh;
 
-//for segmentation hand region
-int cont_num; 
-std::vector <CvRect>	cont_boundbox; 
-std::vector <CvBox2D>	cont_boundbox2D; 
-std::vector <CvPoint>	cont_center;
-
 int input_key;
 bool panelCollisionLock;	//for mutual exclusion of panel input
 panelinput panelInput;
@@ -138,7 +127,7 @@ int	channel_id;
 #endif
 
 #ifdef USE_SKIN_SEGMENTATION
-HandRegion _HandRegion;
+HandRegion gHandRegion;
 CvPoint curr_hands_corners[MAX_NUM_HANDS], prev_hands_corners[MAX_NUM_HANDS];
 float hand_depth_grids[MAX_NUM_HANDS][HAND_GRID_SIZE];
 float curr_hands_ratio[MAX_NUM_HANDS];
@@ -152,31 +141,31 @@ double previous_time = 0.0;
 int    count_frame   = 0;
 deque<double> fps;
 double time_spent    = 0.0;
+double showFPS = 0.0;
 /////////////////////
 
 
 //---------------------------------------------------------------------------
 //Prototype
 //---------------------------------------------------------------------------
+//for Kinect
 bool loadKinectParams(char *filename, CvMat **params, CvMat **distortion);
 void loadKinectTransform(char *filename);
-osg::Node* osgNodeFromBtCollisionShape( const btConvexHullShape* hull, const btTransform& trans );
-void RenderScene(IplImage *arImage, Capture *capture);
-osg::Node* createVArrayFromHField(const btTransform& trans);
 void GenerateTrimeshGroundFromDepth(IplImage* depthIm, float markerDepth);
-osg::Node* createVArrayFromDepth();
 void inpaintDepth(DepthMetaData *niDepthMD, bool halfSize);
-float FindMarkerAffineRotation();
-void setWorldOrigin();
 void TransformImage(IplImage* depthIm, IplImage* ResDepth, float markerDepth, CvSize img_size, bool isDepth);
-void UpdateHandRegions();
-void removeNoise( IplImage* src, int size );
-void FindHands(IplImage *depthIm, IplImage *colourIm);
-void DetectFingertips(cv::Mat handMask);
-void DetectFingertips(cv::Ptr<IplImage> handMask, vector< vector<cv::Point> > & fingerTips);
-int CreateHand(int lower_left_corn_X, int lower_left_corn_Y) ;
+
+//reflesh all scene
+void RenderScene(IplImage *arImage, Capture *capture);
+
+//for Bullet and OSG params
+void setWorldOrigin();
+
+//for virtual hands
+int	 CreateHand(int lower_left_corn_X, int lower_left_corn_Y) ;
 void UpdateAllHands();
-int Find_Num_Hand_Pixel(float depth);
+
+//for OSG menu
 void AssignPhysics2Osgmenu();
 void ResetTextureTransferMode();
 void ExecuteAction(const int & val);
@@ -227,8 +216,9 @@ namespace{
 			count_frame = 0;	
 			time_spent = 0.0;		
 			double mean = cal_mean();
-			cout << "MEAN = " << mean << "ms  " << "SIGMA = " << cal_std(mean) << endl;
-			cout << 1000/mean << endl;
+			showFPS = 1000/mean;
+			//cout << "MEAN = " << mean << "ms  " << "SIGMA = " << cal_std(mean) << endl;
+			//cout <<  showFPS << "FPS" << endl;
 			previous_time = current_time;
 			return true;
 		}
@@ -270,8 +260,7 @@ void VRPN_CALLBACK handle_object (void * userData, const vrpn_TRACKERCB t)
 int main(int argc, char* argv[]) 
 {
 	depthmask_for_mesh = cvCreateImage(MESH_SIZE, IPL_DEPTH_8U, 1);
-	markerSize.width = -1; 
-	markerSize.height = -1;
+	markerSize.width = -1;  markerSize.height = -1;
 
 	//init OpenNI
 	EnumerationErrors errors;
@@ -300,8 +289,10 @@ int main(int argc, char* argv[])
 	//for Kinect view
 	loadKinectParams(KINECT_PARAMS_FILENAME, &kinectParams, &kinectDistort);
 	kinectDistort =0;
-	kinectParams->data.db[2]=320.0; 
-	kinectParams->data.db[5]=240.0;
+	//kinectParams->data.db[2]=320.0; 
+	//kinectParams->data.db[5]=240.0;
+	kinectParams->data.db[2]=640.0; 
+	kinectParams->data.db[5]=480.0;
 
 	//setting kinect context
 	niContext.FindExistingNode(XN_NODE_TYPE_DEPTH, g_depth);
@@ -320,17 +311,9 @@ int main(int argc, char* argv[])
 	{
 		ground_grid[i] = 0; 
 	}
-#ifdef SIM_PARTICLES
-	voxel_grid = new float[1200];
-	for (int i =0;i < 1200; i++) {
-		voxel_grid[i] = 0;
-	}
-#endif
 
 	//controls
 	kc = new KeyboardController();
-
-	//XboxController *xc = new XboxController();
 
 	loadKinectTransform(KINECT_TRANSFORM_FILENAME);
 
@@ -361,14 +344,7 @@ int main(int argc, char* argv[])
 #endif
 
 #ifdef USE_SKIN_SEGMENTATION	//Skin color look up
-	_HandRegion.LoadSkinColorProbTable();
-#endif
-
-#ifdef USE_OPTICAL_FLOW
-	prev_gray = cvCreateImage(cvSize(OPFLOW_SIZE.width, OPFLOW_SIZE.height), IPL_DEPTH_8U, 1);
-	curr_gray = cvCreateImage(cvSize(OPFLOW_SIZE.width, OPFLOW_SIZE.height), IPL_DEPTH_8U, 1);
-	flow_capture = new FlowCapture();
-	flow_capture->Init();
+	gHandRegion.LoadSkinColorProbTable();
 #endif
 
 #if USE_OSGMENU == 1
@@ -382,6 +358,8 @@ int main(int argc, char* argv[])
 	while (running) 
 	{
     //start kinect
+		TickCountAverageBegin();
+
 		if (XnStatus rc = niContext.WaitAnyUpdateAll() != XN_STATUS_OK) 
 		{
 			printf("Read failed: %s\n", xnGetStatusString(rc));
@@ -402,12 +380,11 @@ int main(int argc, char* argv[])
 		transColor320 = cvCreateImage(cvSize(ARMM::ConstParams::SKIN_X, ARMM::ConstParams::SKIN_Y), IPL_DEPTH_8U, 3);
 		memcpy(depthIm->imageData, niDepthMD.Data(), depthIm->imageSize);
 		//cvCircle(colourIm, cvPoint(marker_origin.x,marker_origin.y), 5, CV_BLUE, 3); //for debug to show marker origin
-#ifdef SHOWKINECTIMG
+#if SHOWKINECTIMG == 1
 		cvShowImage("Kinect View", colourIm);
 #endif
 		IplImage *arImage = capture->getFrame();
 		cvWaitKey(1); 
-		//TickCountAverageBegin();
 
 		//check input device
 		input_key = kc->check_input(pOsgRoot, m_world);
@@ -443,14 +420,23 @@ int main(int argc, char* argv[])
 			} else {
 #ifdef USE_SKIN_SEGMENTATION /*Skin color segmentation*/ // may be reduce resolution first as well as cut off depth make processing faster
 				// (2)Sphere representation
-				FindHands(depthIm, colourIm);
+				//----->Transform both depth and color
+				//TickCountAverageBegin();
+				TransformImage(depthIm, transDepth320,	MARKER_DEPTH, cvSize(ARMM::ConstParams::SKIN_X, ARMM::ConstParams::SKIN_Y), true);
+				TransformImage(colourIm, transColor320, MARKER_DEPTH, cvSize(ARMM::ConstParams::SKIN_X, ARMM::ConstParams::SKIN_Y), false);
+				int num_hand_in_scene = gHandRegion.FindHands(depthIm, colourIm, transDepth320, transColor320);
+				REP(i,num_hand_in_scene)
+				{
+					if(m_world->getTotalNumberHand() < num_hand_in_scene) 
+					{
+						CreateHand(curr_hands_corners[i].x, curr_hands_corners[i].y);
+					}
+				}
+				//TickCountAverageEnd();
+
 				//TickCountAverageBegin();
 				UpdateAllHands();
 				//TickCountAverageEnd();
-#endif
-
-#ifdef USE_PARTICLES
-//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 #endif
 				counter++;
 			}
@@ -496,7 +482,8 @@ int main(int argc, char* argv[])
 	//<--Exec data transmission
 	//TickCountAverageBegin();
 	m_Connection->mainloop();
-	//TickCountAverageEnd();
+
+	TickCountAverageEnd();
 #endif
 
 		cvReleaseImage(&arImage);
@@ -575,7 +562,6 @@ void RenderScene(IplImage *arImage, Capture *capture)
 	
 	pOsgRoot->osg_render(arImage, RegistrationParams, capture->getDistortion());
 }
-
 
 bool loadKinectParams(char *filename, CvMat **params, CvMat **distortion) 
 {
@@ -687,7 +673,6 @@ void GenerateTrimeshGroundFromDepth(IplImage* depthIm, float markerDepth)
 {
 	float ground_depth = (float)markerDepth/10;
 	IplImage * depthtmp = cvCreateImage(MESH_SIZE, IPL_DEPTH_8U, 1);
-	//cvConvertScale(depthmask_for_mesh,depthtmp);
 	MaxHeight = ground_depth-40;
 	MinHeight = -MaxHeight;
 
@@ -833,338 +818,6 @@ void registerMarker()
 }
 
 #ifdef USE_SKIN_SEGMENTATION
-void FindHands(IplImage *depthIm, IplImage *colourIm) 
-{
-	//<----(Hand Segmentation) Count up
-	//TickCountAverageBegin();
-
-	//----->Transform both depth and color
-	TransformImage(depthIm, transDepth320, MARKER_DEPTH, cvSize(ARMM::ConstParams::SKIN_X, ARMM::ConstParams::SKIN_Y), true);
-	TransformImage(colourIm, transColor320, MARKER_DEPTH,cvSize(ARMM::ConstParams::SKIN_X, ARMM::ConstParams::SKIN_Y), false);
-
-	//Create image storages
-	IplImage* depthTmp		  = cvCreateImage( cvSize(ARMM::ConstParams::SKIN_X, ARMM::ConstParams::SKIN_Y), IPL_DEPTH_8U, 1);
-	IplImage* colourImResized = cvCreateImage( cvSize(ARMM::ConstParams::SKIN_X, ARMM::ConstParams::SKIN_Y), IPL_DEPTH_8U, 3);
-	IplImage* depthImResized  = cvCreateImage( cvSize(ARMM::ConstParams::SKIN_X, ARMM::ConstParams::SKIN_Y), IPL_DEPTH_32F, 1);
-	IplImage* colourIm640	  = cvCreateImage(CAPTURE_SIZE, IPL_DEPTH_8U, 3);
-	cvResize(transDepth320, depthImResized);
-	cvSmooth(depthImResized, depthImResized, CV_MEDIAN, 3);
-
-	//----->Threshold too near region from Kinect
-	for ( int i = 0 ; i < transDepth320->height ; i ++ )
-	{
-		for ( int j = 0 ; j < transDepth320->width ; j ++ )
-		{
-			float depth_ =  CV_IMAGE_ELEM(transDepth320, float, i, j);
-
-			// dist from ground is larger than 30cm => removing the pixel
-			if( depth_ > 30 || depth_ <= 1)
-			{
-				CV_IMAGE_ELEM(transDepth320, float, i, j) = 0;
-			}
-		}
-	}
-
-	//----->Threshold at marker's depth
-	cvThreshold(transDepth320, depthTmp, 0, 255, CV_THRESH_BINARY_INV); //thres at 1cm above marker
-	cvResize(transColor320, colourImResized);
-	cvSet(colourImResized, cvScalar(0), depthTmp);
-	cvResize(colourImResized, colourIm640, CV_INTER_NN);
-
-	//----->Segment skin color
-	cont_num = MAX_NUM_HANDS;//up to MAX_NUM_HANDS contours
-	cvCopyImage( _HandRegion.GetHandRegion( colourImResized, &cont_num,cont_boundbox, cont_boundbox2D, cont_center), depthTmp);
-	cvThreshold(depthTmp, depthTmp, 0, 255, CV_THRESH_BINARY_INV);	
-	cvSet(colourImResized, cvScalar(0), depthTmp); //apply Hand mask image to colour image
-	cvSet(depthImResized,  cvScalar(0), depthTmp); //apply Hand mask image to depth image
-	cvResize(depthTmp, depthmask_for_mesh, CV_INTER_LINEAR);
-
-  //----->Display image
-	IplImage* colourIm160 = cvCreateImage( cvSize(ARMM::ConstParams::SKIN_X, ARMM::ConstParams::SKIN_Y), IPL_DEPTH_8U, 3);
-	cvCopyImage(colourImResized,colourIm160);
-
-	//----->Draw center of contour
-	float *center_depth; 
-	int numb_hands = cont_center.size();//tmp
-	center_depth = new float[numb_hands];//tmp
-	int num_hand_in_scene = cont_center.size();
-
-	// correct skin image size to 160x120
-	float skin_ratio = ARMM::ConstParams::SKIN_X / MESH_SIZE.width;
-	assert( fabs( (ARMM::ConstParams::SKIN_Y / MESH_SIZE.height) - skin_ratio ) < 0.1); 
-
-	// the corner of the bounding box
-	CvPoint upperLeft = cvPoint(0,0);
-	CvPoint bottomRight = cvPoint(0,0);
-
-	REP(i,num_hand_in_scene)
-	{
-		center_depth[i] = CV_IMAGE_ELEM(transDepth320, float, cont_center.at(i).y, cont_center.at(i).x);
-		const int box_size = skin_ratio * Find_Num_Hand_Pixel(center_depth[i]);
-		const int offset = (box_size-1)/2;
-
-		//  (x2,y2)-----(x1,y2)
-		//	   |           | 
-		//  (x2,y1)-----(x1,y1)
-		int x1 = cont_center.at(i).x + offset;//lower right corner
-		int y1 = cont_center.at(i).y + offset;
-		int x2 = cont_center.at(i).x - offset;//upper left corner
-		int y2 = cont_center.at(i).y - offset;					
-		curr_hands_corners[i] = cvPoint(x2, ARMM::ConstParams::SKIN_Y-y1);
-		bottomRight = cvPoint(x1,y1); 
-		upperLeft   = cvPoint(x2,y2);
-
-		//----->Sort all the points using nearest neighbor
-	
-		//temporary test 1 hand
-		//----->Copy height info to grid and display
-		//				for(int i = 0; i < num_hand_in_scene; i++) {
-		IplImage* depth11	= cvCreateImage(cvSize(MIN_HAND_PIX, MIN_HAND_PIX), IPL_DEPTH_32F, 1);
-		IplImage* depth11_2 = cvCreateImage(cvSize(MIN_HAND_PIX, MIN_HAND_PIX), IPL_DEPTH_32F, 1);
-
-		cvSetImageROI(depthImResized, cvRect(x2, y2 ,box_size,box_size));
-
-		cvResize(depthImResized, depth11, CV_INTER_NN);
-		//cvSmooth(depth11, depth11_2, CV_MEDIAN, 3);
-
-		//int resize_ratio_x = SKIN_SEGM_SIZE.width / MIN_HAND_PIX;
-		//int resize_ratio_y = SKIN_SEGM_SIZE.height/ MIN_HAND_PIX;
-		for(int j = 0; j < MIN_HAND_PIX; j++)
-		{
-			for(int k = 0; k < MIN_HAND_PIX; k++) 
-			{
-				int ind = j * MIN_HAND_PIX + k;
-				hand_depth_grids[i][ind] = CV_IMAGE_ELEM(depth11, float, ((int)MIN_HAND_PIX-1)-k, j);
-			}
-		}
-
-		//char win_name[50];
-		//sprintf(win_name,"XXXX %d", i);
-		//IplImage* depth_tmp_640 = cvCreateImage(cvSize(640, 480), IPL_DEPTH_32F, 1);
-		//cvResize(depth11_2, depth_tmp_640, CV_INTER_NN);
-		//cvShowImage(win_name,depth_tmp_640);
-		//cvReleaseImage(&depth_tmp_640);
-
-		cvReleaseImage(&depth11_2); 
-		cvReleaseImage(&depth11); 
-
-		//----->Display
-		char center_depth_print[50];
-		sprintf(center_depth_print,"%.2lf cm", center_depth[i]);
-
-		//for displaying distance from ground
-		//CvFont font;//tmp
-		//cvInitFont(&font,CV_FONT_HERSHEY_SIMPLEX|CV_FONT_ITALIC, 0.3 * skin_ratio , 0.3 * skin_ratio , 0, 1);//tmp
-		//cvPutText (colourIm160, center_depth_print,  cont_center.at(i), &font, cvScalar(0,255,0));
-
-		//cvCircle(colourIm160, cont_center.at(i),2,cvScalar(255,0,0));
-		//cvRectangle(colourIm160, cvPoint(x1,y1) ,cvPoint(x2,y2),cvScalar(0,0,255));
-	    cvRectangle(transColor320, cvPoint(x1,y1) ,cvPoint(x2,y2),cvScalar(0,0,255));
-
-		//HACK TODO you should change this ratio depended on hand depth
-		curr_hands_ratio[0] = (float)Find_Num_Hand_Pixel(-1)/MIN_HAND_PIX;
-
-		curr_hands_corners[i].x /= skin_ratio;
-		curr_hands_corners[i].y /= skin_ratio;
-		if(m_world->getTotalNumberHand() < num_hand_in_scene) 
-		{
-			CreateHand(curr_hands_corners[i].x, curr_hands_corners[i].y);
-		}
-
-		cvResetImageROI(transDepth320);
-	}
-
-	cont_boundbox.clear();
-	cont_boundbox2D.clear();
-	cont_center.clear();
-
-	IplImage* col_640 = cvCreateImage(cvSize(ARMM::ConstParams::SKIN_X, ARMM::ConstParams::SKIN_Y), IPL_DEPTH_8U, 3);
-	cvResize(colourIm160, col_640, CV_INTER_LINEAR);
-	//for(int i = 0; i < num_hand_in_scene; i++) {
-	//	cvCircle(col_640,cvPoint(curr_hands_corners[i].x, 160 - curr_hands_corners[i].y),5,cvScalar(0,255,255));
-	//}
-	//<-- (HAND SEGMENTATION) end
-	//TickCountAverageEnd();
-
-	//<---Finger detection
-	//TickCountAverageBegin();
-	vector< vector<cv::Point> > fingerTips;
-	cv::Ptr<IplImage> grey_640 = cvCreateImage(cvGetSize(col_640), 8, 1);	
-	cvCvtColor(col_640, grey_640, CV_BGR2GRAY);	
-	cvThreshold(grey_640, grey_640, 1, 255, cv::THRESH_BINARY);
-	DetectFingertips(grey_640, fingerTips);
-
-	// init fingertips
-	fingerIndex.clear();
-
-	//draw fingertips
-	const float diffX = abs(upperLeft.x - bottomRight.x)/MIN_HAND_PIX;
-	const float diffY = abs(upperLeft.y - bottomRight.y)/MIN_HAND_PIX;
-
-	REP(i,fingerTips.size())
-	{
-		REP(j,fingerTips[i].size())
-		{
-			//check pixels matching fingertips
-			REP(dy,MIN_HAND_PIX) REP(dx,MIN_HAND_PIX)
-			{
-				CvPoint tmpFingertips;
-				tmpFingertips.x = upperLeft.x+dx*diffX;
-				tmpFingertips.y = upperLeft.y+dy*diffY;
-				if(tmpFingertips.x < 0 
-				|| tmpFingertips.x >= ARMM::ConstParams::SKIN_X
-				|| tmpFingertips.y < 0
-				|| tmpFingertips.y >= ARMM::ConstParams::SKIN_Y
-				){
-					continue;
-				}
-
-				if( abs(fingerTips[i][j].x-tmpFingertips.x) <= 2
-				&&  abs(fingerTips[i][j].y-tmpFingertips.y) <= 2)
-				{
-					//OSG‚ÅŠÖ˜A•t‚¯‚Ä‚¢‚éIndex‚Ì‘–¸•ûŒü‚É‚æ‚Á‚ÄIndex‚Í’è‚Ü‚é
-					fingerIndex.push_back( dx*MIN_HAND_PIX + (MIN_HAND_PIX-1)-dy);
-				}
-			}
-
-#ifdef SHOWSEGMENTATION
-			cvCircle(col_640, fingerTips[i][j] , 10, cv::Scalar(255,255,0), 4);
-#endif
-		}
-	}
-	//printf("Upper=(%d,%d) Bottom=(%d,%d)\n",upperLeft.x, upperLeft.y, bottomRight.x, bottomRight.y);
-	//printf("DiffX=%f, DiffY=%f\n",diffX, diffY);
-	//cout << "Finger=" << fingerIndex.size() << endl;
-	//<--(FINGERTIPS DETECTION) end
-	//TickCountAverageEnd();
-
-#ifdef SHOWSEGMENTATION
-	cvShowImage("Op_Flow_640",col_640);
-	cvShowImage("transcolor",transColor320);
-#endif
-
-	//memory release
-	delete center_depth;
-
-	cvReleaseImage(&col_640);
-	cvReleaseImage(&colourIm160);
-	cvReleaseImage(&depthTmp);
-	cvReleaseImage(&colourImResized);
-	cvReleaseImage(&depthImResized);
-	cvReleaseImage(&colourIm640);
-}
-#endif
-
-void DetectFingertips(cv::Ptr<IplImage> handMask, 
-	vector< vector<cv::Point> > & fingerTips)
-{
-	fingerTips.clear();
-	vector< vector<cv::Point> > contours;
-
-	//cv::findContours(src, contours, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
-
-	CvMemStorage* storage   = cvCreateMemStorage( 0 );     
-	CvSeq* cs = NULL;    
-	CvScalar black          = CV_RGB( 0, 0, 0 ); 
-	CvScalar white          = CV_RGB( 255, 255, 255 ); 
-	int contours_count= cvFindContours( handMask, storage, &cs, sizeof( CvContour ), CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE );  
-
-	int loop = 0;
-	contours.resize(contours_count);
-    for( ; cs!= 0; cs= cs->h_next, loop++)
-    {
-        REP(i,cs->total)
-        {
-			CvPoint tmpPoint = *CV_GET_SEQ_ELEM( CvPoint, cs, i );
-			contours[loop].push_back(cv::Point(tmpPoint));
-        }
-
-		cv::Mat contourMat = cv::Mat(contours[loop]);
-		double area = cv::contourArea(contourMat);
-
-		if (area > 200)  { // possible hand
-			vector<cv::Point> tmp_fingertips;
-			tmp_fingertips.clear();
-
-			cv::Scalar center = mean(contourMat);
-			cv::Point centerPoint = cv::Point(static_cast<int>(center.val[0]), static_cast<int>(center.val[1]) );
-			vector<cv::Point> approxCurve;
-			CvSeq *approx = cvApproxPoly(cs, sizeof(CvContour), NULL, CV_POLY_APPROX_DP, 15);
-			//cv::approxPolyDP(contourMat, approxCurve, 15, true); //error part
-
-			REP(i,approx->total)
-			{
-				CvPoint tmpPoint = *CV_GET_SEQ_ELEM( CvPoint, approx, i );
-				approxCurve.push_back(cv::Point(tmpPoint));
-			}
-
-			vector<int> hull;
-			vector<cv::Point> hullShape;
-			//cv::convexHull(cv::Mat(approxCurve), hull);
-			CvSeq* h = cvConvexHull2(approx,0,CV_CLOCKWISE,0);
-			//cout << "hogehoge4" << endl;
-
-
-			REP(i,h->total)
-			{
-				//CvPoint tmpPoint = *CV_GET_SEQ_ELEM( CvPoint, h, i ); //this code occurs assertion
-				CvPoint tmpPoint = **CV_GET_SEQ_ELEM( CvPoint*, h, i ); //this one is okay?
-				hullShape.push_back(cv::Point(tmpPoint));
-			}
-
-			int approxPointer = 0;
-			REP(i,hullShape.size())
-			{
-				for(;approxPointer<static_cast<int>(approxCurve.size());approxPointer++)
-				{
-					if(hullShape[i] == approxCurve[approxPointer]){
-						hull.push_back(approxPointer);
-						break;
-					}
-				}
-			}
-			//cout << "Hull size = " << hull.size() << endl;
-			// find upper and lower bounds of the hand and define cutoff threshold (don't consider lower vertices as fingers)
-			int upper = 600, lower = 0;
-			for (unsigned int j=0; j<hull.size(); j++) {
-				int idx = hull[j]; // corner index
-				if (approxCurve[idx].y < upper) upper = approxCurve[idx].y;
-				if (approxCurve[idx].y > lower) lower = approxCurve[idx].y;
-			}
-
-			float cutoff = lower - (lower - upper) * 0.1f;
-			// find interior angles of hull corners
-			for (unsigned int j=0; j<hull.size(); j++) {
-				int idx = hull[j]; // corner index
-				int pdx = idx == 0 ? approxCurve.size() - 1 : idx - 1; //  predecessor of idx
-				int sdx = idx == approxCurve.size() - 1 ? 0 : idx + 1; // successor of idx
-				cv::Point v1 = approxCurve[sdx] - approxCurve[idx];
-				cv::Point v2 = approxCurve[pdx] - approxCurve[idx];
-				double angle = acos( (v1.x*v2.x + v1.y*v2.y) / (cv::norm(v1) * cv::norm(v2)) );
-				// low interior angle + within upper 90% of region -> we got a finger
-				if ( angle < 1 && approxCurve[idx].y < cutoff) {
-					tmp_fingertips.push_back(cv::Point( approxCurve[idx].x , approxCurve[idx].y) );
-				}
-			}
-			fingerTips.push_back(tmp_fingertips);
-		}
-	}
-}
-
-int Find_Num_Hand_Pixel(float depth) 
-{
-	float box_pix = (ARMM::ConstParams::HAND_BOX_CM/WORLD_SCALE+depth*ARMM::ConstParams::KINECT_PIX_PER_DEPTH);
-	int ans;
-	if(((int) ceil(box_pix)%2) == 0)
-		ans = floor(box_pix);
-	else
-		ans = ceil(box_pix);
-	//printf("pixel width = %d \n", ans);
-	return ans;
-}
-
-#ifdef USE_SKIN_SEGMENTATION
-
 int CreateHand(int lower_left_corn_X, int lower_left_corn_Y) 
 {
 	int index = m_world->getTotalNumberHand();
@@ -1184,18 +837,6 @@ void UpdateAllHands()
 		pOsgRoot->osg_UpdateHand(i, m_world->debugHandX(i), m_world->debugHandY(i), m_world->debugHandZ(i));
 	}
 
-}
-#endif
-
-#ifdef SIM_PARTICLES
-void CreateOSGSphereProxy() {
-	for(int i = 0; i < 30; i++) {
-		for(int j = 0; j < 40; j++) {
-			int index = i*40 + j;
-			osgAddWorldSphereProxyNode(osgNodeFromBtSphere(m_world->getWorldSphereTransform(index)));
-		}
-	}
-	printf("Spheres proxy created! \n");
 }
 #endif
 

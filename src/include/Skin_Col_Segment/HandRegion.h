@@ -9,26 +9,38 @@
 #endif
 #include "GMM.h"
 
-#define ALPHA   0.9
+#define ALPHA 0.9
 
 class HandRegion
 {
+private:
+
+    GMM     mSkinColor;
+    GMM     mNonSkinColor;
+
+    IplImage *      mImage;            // Hand Region Image ( binary )
+
+	//for segmentation hand region
+	std::vector <CvRect>	cont_boundbox; 
+	std::vector <CvBox2D>	cont_boundbox2D; 
+	std::vector <CvPoint>	cont_center;
+
 public:
     HandRegion(void);
     ~HandRegion(void);
 
     bool LoadSkinColorProbTable();
 
+
     IplImage * GetHandRegion( IplImage * srcImage, int *cont_num, std::vector <CvRect> & cont_boundbox,  std::vector <CvBox2D> & cont_boundbox2D, std::vector <CvPoint> & cont_center);
 
-    IplImage * QueryHandRegion() { return _pImage; }
+    IplImage * QueryHandRegion() { return mImage; };
+
+	int FindHands(IplImage *depthIm, IplImage *colourIm, IplImage *transDepth320, IplImage *transColor320);
 
 private:
-
-    GMM     _SkinColor;
-    GMM     _NonSkinColor;
-
-    IplImage *      _pImage;            // Hand Region Image ( binary )
+	void DetectFingertips(cv::Ptr<IplImage> handMask, std::vector< std::vector<cv::Point> > & fingerTips);
+	int FindNumHandPixels(float depth);
 };
 
 #endif // _HAND_REGION_H_
