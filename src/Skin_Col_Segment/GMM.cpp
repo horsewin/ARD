@@ -1,4 +1,4 @@
-#include "GMM.h"
+#include "Skin_Col_Segment\GMM.h"
 #include <stdio.h>
 
 GMM::GMM()
@@ -90,10 +90,10 @@ bool GMM::AddGaussian(
 
 float GMM::GetProbability( CvMat * Sample )
 {
-    double P = 0.0;
+    float P = 0.0;
     CvMat *diffMat = cvCloneMat( Sample );
     CvMat *diffMatT = cvCreateMat( 1, _nDim, CV_64FC1 );
-    double expo;
+    float expo;
     CvMat expoMat = cvMat( 1, 1, CV_64FC1, &expo );
 
     for ( int k = 0 ; k < _nMixture ; k ++ )

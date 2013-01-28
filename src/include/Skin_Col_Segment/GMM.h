@@ -15,15 +15,15 @@ public:
     GMM();
     ~GMM();
 
-    bool LoadFile( char *filename );
-    bool AddGaussian( CvMat * MeanMat, CvMat * CovMat, float Weight );
+    bool	LoadFile( char *filename );
+    bool	AddGaussian( CvMat * MeanMat, CvMat * CovMat, float Weight );
 
-    float GetProbability( CvMat * Sample );
+    float	GetProbability( CvMat * Sample ); //’Fdouble‚É‚·‚é‚Æ–³‘Ê‚È—Ìˆæ‚ğ‚½‚­‚³‚ñE‚Á‚Ä‚«‚½
 
-    void MakeLookUpTable();
-    bool SaveLookUpTable( char *filename );
-    bool LoadLookUpTable( char *filename );
-    float GetProbabilityByLookup( int R, int G, int B );
+    void	MakeLookUpTable();
+    bool	SaveLookUpTable( char *filename );
+    bool	LoadLookUpTable( char *filename );
+    float	GetProbabilityByLookup( int R, int G, int B );
 
 private:
     int      _nMixture;
