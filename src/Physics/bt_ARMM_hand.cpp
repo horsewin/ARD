@@ -1,10 +1,10 @@
-
 #include "Physics\bt_ARMM_hand.h"
 #include <iostream>
 
+#include "UserConstant.h"
+#include "constant.h"
+
 #define CUBE_HALF_EXTENTS 1
-#define SIM_MICROMACHINE 1
-//#define SIM_PARTICLES 1
 
 using namespace std;
 //#include "BulletCollision/CollisionDispatch/btSimulationIslandManager.h"
@@ -23,9 +23,8 @@ bt_ARMM_hand::bt_ARMM_hand(btDiscreteDynamicsWorld* m_dynamicsWorld, btAlignedOb
 	world_scale_hand = world_scale;
 
 	float sphereMass = 0;
-	//Sphere_Shape =  new btSphereShape(world_scale_hand); //test
-	Sphere_Shape =  new btSphereShape(world_scale_hand*ratio);
-//	Sphere_Shape =  new btSphereShape(HAND_SPHERE_SIZE);
+	Sphere_Shape =  new btSphereShape(world_scale_hand); //test
+	//Sphere_Shape =  new btSphereShape(world_scale_hand*ratio);
 
 	m_collisionShapes.push_back(Sphere_Shape);
 	btVector3 localInertia(0.0f, 0.0f, 0.0f);
@@ -39,10 +38,8 @@ bt_ARMM_hand::bt_ARMM_hand(btDiscreteDynamicsWorld* m_dynamicsWorld, btAlignedOb
 		for(int j = 0; j < num_sphere_x; j++) 
 		{
 			int index = i*num_sphere_x + j;
-			float x = (global_x+i*world_scale_hand);
-			float y = (global_y+j*world_scale_hand);
 			//WorldSphereProxyMotionState.push_back(new btDefaultMotionState(btTransform(btQuaternion(0,0,0,1),btVector3(0,0,0))));
-			handSphereMotionState.push_back(new btDefaultMotionState(btTransform(btQuaternion(0,0,0,1),btVector3(x,y,0))));
+			handSphereMotionState.push_back(new btDefaultMotionState(btTransform(btQuaternion(0,0,0,1),btVector3(0,0,0))));
 			btRigidBody::btRigidBodyConstructionInfo Sphere_Body_CI(sphereMass,handSphereMotionState.at(index),Sphere_Shape,localInertia);
 			handSphereRigidBody.push_back(new btRigidBody(Sphere_Body_CI));
 			//handSphereRigidBody.at(index)->setFriction(btScalar(0.9));
@@ -61,9 +58,6 @@ bt_ARMM_hand::bt_ARMM_hand(btDiscreteDynamicsWorld* m_dynamicsWorld, btAlignedOb
 			}
 		}
 	}
-
-	prev_x_corner = global_x;
-	prev_y_corner = global_y;
 }
 
 bt_ARMM_hand::~bt_ARMM_hand(void) {}
@@ -71,10 +65,14 @@ bt_ARMM_hand::~bt_ARMM_hand(void) {}
 void bt_ARMM_hand::Update(float global_x, float global_y, float curr_hands_ratio, float* depth_grid)
 {
 	int hand_area = 0;
-	for(int i = 0; i < num_sphere_y; i++) {
-		for(int j = 0; j < num_sphere_x; j++) {
+	for(int i = 0; i < num_sphere_y; i++) 
+	{
+		for(int j = 0; j < num_sphere_x; j++) 
+		{
 			int index = i*num_sphere_x + j;
-			if(handSphereRigidBody.at(index)->getCollisionFlags() != 0 ) {
+
+			if(handSphereRigidBody.at(index)->getCollisionFlags() != 0 ) 
+			{
 				handSphereRigidBody.at(index)->setCollisionFlags( handSphereRigidBody.at(index)->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);//2
 				handSphereRigidBody.at(index)->setActivationState(DISABLE_DEACTIVATION);//4	
 			
@@ -85,15 +83,17 @@ void bt_ARMM_hand::Update(float global_x, float global_y, float curr_hands_ratio
 				//trans.getOrigin().setX(x);
 				//trans.getOrigin().setY(y);
 				if(depth_grid[index] > 0){
-					float x = (float) (global_x+i*curr_hands_ratio - cx)*world_scale_hand; //test
-					float y = (float) (global_y+j*curr_hands_ratio - (120-cy))*world_scale_hand; //test
+					float x = (float) (global_x+i*curr_hands_ratio - cx)*world_scale_hand; //
+					float y = (float) (global_y+j*curr_hands_ratio - (ARMM::ConstParams::SKIN_Y/ARMM::ConstParams::WORLD_DIV-cy))*world_scale_hand; //
+					//float x = (float) (global_x+i*curr_hands_ratio - cx)*world_scale_hand; //test
+					//float y = (float) (global_y+j*curr_hands_ratio - (ARMM::ConstParams::SKIN_Y/ARMM::ConstParams::WORLD_DIV-cy))*world_scale_hand; //test
 					trans.getOrigin().setX(x);
 					trans.getOrigin().setY(y);
 					trans.getOrigin().setZ(depth_grid[index]);
 					hand_area++;
 				}else{
 					//float x = (float) (global_x+i*curr_hands_ratio - cx)*world_scale_hand; //test
-					//float y = (float) (global_y+j*curr_hands_ratio - (120-cy))*world_scale_hand; //test
+					//float y = (float) (global_y+j*curr_hands_ratio - (ARMM::ConstParams::SKIN_Y/ARMM::ConstParams::WORLD_DIV-cy))*world_scale_hand; //test
 					//trans.getOrigin().setX(x);
 					//trans.getOrigin().setY(y);
 					//trans.getOrigin().setZ(0);
@@ -119,10 +119,6 @@ void bt_ARMM_hand::Update(float global_x, float global_y, float curr_hands_ratio
 			}
 		}
 	}
-	//cout << hand_area << endl;
-//	cout << "Current Ratio = " << curr_hands_ratio << endl;
-	prev_x_corner = global_x;
-	prev_y_corner = global_y;
 }
 
 //Only need to return the lower-left sphere transform and update other sphere accordingly

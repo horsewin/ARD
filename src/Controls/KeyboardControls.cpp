@@ -187,6 +187,26 @@ int KeyboardController::check_input(boost::shared_ptr<osg_Root> osgRoot, bt_ARMM
 			cvWrite(fs, "KinectTransform", kinectTransform);
 			cvReleaseFileStorage( &fs );
 			printf("Saved Kinect Transform\n");
+
+			//for client
+			CvFileStorage *fc = cvOpenFileStorage(KINECT_CLIENT_TRANSFORM_FILENAME, 0, CV_STORAGE_WRITE);
+			cvStartWriteStruct(fc, "MarkerSize", CV_NODE_MAP); 
+				cvWriteInt(fc, "width", markerSize.width);
+				cvWriteInt(fc, "height", markerSize.height);
+			cvEndWriteStruct(fc);
+
+			cvStartWriteStruct(fc, "MarkerOrigin", CV_NODE_MAP); 
+				cvWriteInt(fc, "x", marker_origin.x);
+				cvWriteInt(fc, "y", marker_origin.y);
+			cvEndWriteStruct(fc);
+
+			cvWriteReal(fc, "WorldScale", WORLD_SCALE);
+			cvWriteReal(fc, "WorldAngle", WORLD_ANGLE);
+			cvWriteReal(fc, "MARKER_DEPTH", MARKER_DEPTH);
+
+			cvWrite(fc, "KinectTransform", kinectTransform);
+			cvReleaseFileStorage( &fc );
+			printf("Saved Kinect Transform for client\n");			
 		}
 	}
 	return 0;

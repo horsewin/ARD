@@ -10,6 +10,7 @@ namespace ARMM
 	public:
 
 		static const double	KINECT_PIX_PER_DEPTH;
+		static const int	WORLD_DIV;
 		static const int	GRID_SIZE;
 
 		static const float SPHERE_SIZE;
@@ -40,6 +41,7 @@ namespace ARMM
 
 		//for virtual hands
 		static const int SPHERE_SCALE;
+		static const float HAND_THICKNESS;
 	};
 }
 #endif

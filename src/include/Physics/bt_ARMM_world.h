@@ -126,7 +126,6 @@ public:
 		
 		//Function for hand creation
 		void createHand(int hand_x, int hand_y, int sphere_resolution, float ratio);
-		void updateHandDepth(int index, int hand_x, int hand_y, float* depth_grid);
 		void updateHandDepth(int index, int hand_x, int hand_y, float curr_hands_ratio, float* depth_grid);
 		btTransform getHandTransform(int index);
 		int getTotalNumberHand();

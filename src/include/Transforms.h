@@ -63,8 +63,9 @@ bool calcKinectOpenGLTransform(IplImage *colourIm, IplImage* depthIm, CvMat** tr
 		float height1 = sqrt((xnNewCorner[3].X - xnNewCorner[0].X)*(xnNewCorner[3].X - xnNewCorner[0].X) + (xnNewCorner[3].Y - xnNewCorner[0].Y)*(xnNewCorner[3].Y - xnNewCorner[0].Y) + (xnNewCorner[3].Z - xnNewCorner[0].Z)*(xnNewCorner[3].Z - xnNewCorner[0].Z));
 		float height2 = sqrt((xnNewCorner[2].X - xnNewCorner[1].X)*(xnNewCorner[2].X - xnNewCorner[1].X) + (xnNewCorner[2].Y - xnNewCorner[1].Y)*(xnNewCorner[2].Y - xnNewCorner[1].Y) + (xnNewCorner[2].Z - xnNewCorner[1].Z)*(xnNewCorner[2].Z - xnNewCorner[1].Z));
 		//markerSize.width = (width1+width2)/2.0; markerSize.height = markerSize.width * ((float)mt.at(0).marker.size.height/(float)mt.at(0).marker.size.width);
-		markerSize.height = (height1+height2)/2.0; markerSize.width = markerSize.height * ((float)mt.at(0).marker.size.width/(float)mt.at(0).marker.size.height);
-		printf("Marker Size %dx%d\n", markerSize.width, markerSize.height);
+		markerSize.height = (height1+height2)/2.0; 
+		markerSize.width = markerSize.height * ((float)mt.at(0).marker.size.width/(float)mt.at(0).marker.size.height);
+		printf("Marker Size = %d x %d\n", markerSize.width, markerSize.height);
 		//if(USE_TRIMESH_GROUND) {
 			//WORLD_SCALE = (xnCorner[1].X - xnCorner[0].X)*1.6/640;// (x*2/640=x/320)
 			//WORLD_SCALE = 4.2;
@@ -123,7 +124,10 @@ bool calcKinectOpenGLTransform(IplImage *colourIm, IplImage* depthIm, CvMat** tr
 			
 		}
 		WORLD_ANGLE = FindMarkerAffineRotation(markCorn);
-		if(UseAverageDepth) {
+
+		//4隅の平均をとる
+		if(UseAverageDepth) 
+		{
 			float sum=0;
 			for(int i = 0; i < 4; i++) sum += markCorn[i].z;
 			MARKER_DEPTH = sum/4;
@@ -135,7 +139,8 @@ bool calcKinectOpenGLTransform(IplImage *colourIm, IplImage* depthIm, CvMat** tr
 			}
 			MARKER_DEPTH = min;
 		}
-		float pixel_width = (xnCorner[1].X- xnCorner[0].X)/4; //なんで4??画像サイズが160x120に対応するため？？
+		const float WORLD_DIV = 4.0;
+		float pixel_width = (xnCorner[1].X- xnCorner[0].X)/WORLD_DIV; //なんで4??画像サイズが160x120に対応するため？？->4を定数に変更
 		//WORLD_SCALE = (floorf(markerSize.width*10/pixel_width) /100)-0.01;
 		WORLD_SCALE = floorf(markerSize.width*10/pixel_width) /100;//cm_per_pixel
 		printf("width = %.4f,  WORLD_SCALE= %.4f \n", pixel_width, WORLD_SCALE);

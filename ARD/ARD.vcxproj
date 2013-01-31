@@ -121,6 +121,10 @@
     <ClInclude Include="..\src\include\UserConstant.h" />
     <ClInclude Include="..\src\include\ViewingModel.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\COLLISIONLOG.txt" />
+    <None Include="..\README.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -147,4 +147,12 @@
       <Filter>Rendering</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\README.txt">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\COLLISIONLOG.txt">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>

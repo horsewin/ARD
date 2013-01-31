@@ -351,7 +351,7 @@ int HandRegion::FindHands(IplImage *depthIm, IplImage *colourIm, IplImage *trans
 	REP(i,cont_center.size())
 	{
 		center_depth[i] = CV_IMAGE_ELEM(transDepth320, float, cont_center.at(i).y, cont_center.at(i).x);
-		const int box_size = skin_ratio * FindNumHandPixels(center_depth[i]);
+		const int box_size = skin_ratio * FindNumHandPixels(center_depth[i]-ARMM::ConstParams::HAND_THICKNESS);
 		const int offset = (box_size-1)/2;
 
 		//  (x2,y2)-----(x1,y2)
@@ -382,16 +382,19 @@ int HandRegion::FindHands(IplImage *depthIm, IplImage *colourIm, IplImage *trans
 			for(int k = 0; k < MIN_HAND_PIX; k++) 
 			{
 				int ind = j * MIN_HAND_PIX + k;
-				hand_depth_grids[i][ind] = CV_IMAGE_ELEM(depth11, float, ((int)MIN_HAND_PIX-1)-k, j);
+				//version 2013.1.28
+				//hand_depth_grids[i][ind] = CV_IMAGE_ELEM(depth11, float, ((int)MIN_HAND_PIX-1)-k, j);
+				//version 2013.1.29 considering the thin of a hand
+				hand_depth_grids[i][ind] = CV_IMAGE_ELEM(depth11, float, ((int)MIN_HAND_PIX-1)-k, j)
+											- ARMM::ConstParams::HAND_THICKNESS;
 			}
 		}
 		cvReleaseImage(&depth11); 
 
 		//----->Display
-		char center_depth_print[50];
-		sprintf(center_depth_print,"%.2lf cm", center_depth[i]);
-
-		//for displaying distance from ground
+		//char center_depth_print[50];
+		//sprintf(center_depth_print,"%.2lf cm", center_depth[i]);
+		////for displaying distance from ground
 		//CvFont font;//tmp
 		//cvInitFont(&font,CV_FONT_HERSHEY_SIMPLEX|CV_FONT_ITALIC, 0.3 * skin_ratio , 0.3 * skin_ratio , 0, 1);//tmp
 		//cvPutText (colourIm160, center_depth_print,  cont_center.at(i), &font, cvScalar(0,255,0));
@@ -401,7 +404,7 @@ int HandRegion::FindHands(IplImage *depthIm, IplImage *colourIm, IplImage *trans
 	    cvRectangle(transColor320, cvPoint(x1,y1) ,cvPoint(x2,y2),cvScalar(0,0,255));
 
 		//HACK TODO you should change this ratio depended on hand depth
-		curr_hands_ratio[0] = (float)FindNumHandPixels(-1)/MIN_HAND_PIX;
+		curr_hands_ratio[0] = (float)FindNumHandPixels(0) / MIN_HAND_PIX;
 
 		curr_hands_corners[i].x /= skin_ratio;
 		curr_hands_corners[i].y /= skin_ratio;

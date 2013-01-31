@@ -16,6 +16,7 @@ namespace ARMM
 	const float ConstParams::HAND_BOX_CM = 20.f; // 25 cm
 	const double ConstParams::KINECT_PIX_PER_DEPTH = 0.4610778;
 	const int	ConstParams::GRID_SIZE =19200;
+	const int	ConstParams::WORLD_DIV = 4;
 
 	const float ConstParams::SPHERE_SIZE	= 2;
 	const float ConstParams::CUBE_SIZE		= 4;
@@ -39,4 +40,6 @@ namespace ARMM
 
 	//for virtual hands
 	const int ConstParams::SPHERE_SCALE = 10;
+	const float ConstParams::HAND_THICKNESS = 1.5;
+
 }

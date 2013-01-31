@@ -590,7 +590,7 @@ void loadKinectTransform(char *filename)
 		CvSeq *s = cvGetFileNodeByName(fs, 0, "MarkerSize")->data.seq;
 		markerSize.width = cvReadInt((CvFileNode*)cvGetSeqElem(s, 0));
 		markerSize.height = cvReadInt((CvFileNode*)cvGetSeqElem(s, 1));
-		printf("Makerker Size = %d\n", markerSize.width);
+		printf("Marker Size = %d x %d\n", markerSize.width, markerSize.height);
 		s = cvGetFileNodeByName(fs, 0, "MarkerOrigin")->data.seq;
 		marker_origin.x = cvReadInt((CvFileNode*)cvGetSeqElem(s, 0));
 		marker_origin.y = cvReadInt((CvFileNode*)cvGetSeqElem(s, 1));
@@ -598,6 +598,7 @@ void loadKinectTransform(char *filename)
 		WORLD_SCALE = cvReadRealByName(fs, 0, "WorldScale", 1);
 		WORLD_ANGLE = cvReadRealByName(fs, 0, "WorldAngle", 0);
 		MARKER_DEPTH = cvReadRealByName(fs, 0, "MARKER_DEPTH", 0);
+		printf("WORLD_SCALE= %.4f \n", WORLD_SCALE);
 
 		CvFileNode* fileparams = cvGetFileNodeByName( fs, NULL, "KinectTransform" );
 		kinectTransform = (CvMat*)cvRead( fs, fileparams );
@@ -765,9 +766,8 @@ void inpaintDepth(DepthMetaData *niDepthMD, bool halfSize)
 
 void setWorldOrigin() 
 {
-	const int div = 4;
-	WORLD_ORIGIN_X = marker_origin.x/div; 
-	WORLD_ORIGIN_Y = marker_origin.y/div; 
+	WORLD_ORIGIN_X = marker_origin.x / ARMM::ConstParams::WORLD_DIV; 
+	WORLD_ORIGIN_Y = marker_origin.y / ARMM::ConstParams::WORLD_DIV; 
 	center_trimesh_osg = cvPoint2D32f(WORLD_ORIGIN_X, WORLD_ORIGIN_Y);
 	m_world->set_center_trimesh(WORLD_ORIGIN_X,WORLD_ORIGIN_Y);
 }
@@ -777,8 +777,10 @@ void registerMarker()
 	if (calcKinectOpenGLTransform(colourIm, depthIm, &kinectTransform)) 
 	{
 		//Load in the marker for registration
+		//original marker width = 40cm
+		// A unit of markerSize.width is [pixel]
 		pOsgRoot->osg_inittracker(MARKER_FILENAME, 400, markerSize.width);	
-		printf("Reloaded Marker Size = %d\n", markerSize.width);
+		printf("Reloaded Marker Size = %dx%d\n", markerSize.width, markerSize.height);
 		//Set OSG Menu
 
 		//In original ARMM, this code is uncommented out---> 

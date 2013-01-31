@@ -28,7 +28,7 @@ extern osg::Vec3d softTexture_array[resX*resY];
 //---------------------------------------------------------------------------
 // Constant/Define
 //---------------------------------------------------------------------------
-const int HANDS_BUFFER = 3000;
+const int HANDS_BUFFER = 30000; // a developer should set proper value to the object you want to deal with.
 
 //---------------------------------------------------------------------------
 // Code
@@ -40,10 +40,6 @@ vrpn_Tracker( "ARMM_Comm", c )
 	register_types();
 
 	// initialize the hand position
-	REP(i,UDP_LIMITATION){
-		REP(j,3){
-		}
-	}
 
 	mDataType = REGULAR;
 }
@@ -74,9 +70,12 @@ int	ARMM_Communicator::encode_hand_to(char *buf, int division)
 	vrpn_buffer(&bufptr, &buflen, d_sensor);
 	
 	//packing hands info
-	REP(i,UDP_LIMITATION) REP(j,3)
+	REP(i,UDP_LIMITATION)
 	{
-		vrpn_buffer(&bufptr, &buflen, hand[i][j]);
+		REP(j,3)
+		{
+			vrpn_buffer(&bufptr, &buflen, hand[i][j]);
+		}
 	}
 
 	return HANDS_BUFFER - buflen;
@@ -95,9 +94,12 @@ int	ARMM_Communicator::encode_softtexture_to(char *buf, int division)
 	vrpn_buffer(&bufptr, &buflen, d_sensor);
 	
 	//packing soft texture info
-	REP(i, resX*resY) REP(j,3)
+	REP(i, resX*resY)
 	{
-		vrpn_buffer(&bufptr, &buflen, softT[i][j]);
+		REP(j,3)
+		{
+			vrpn_buffer(&bufptr, &buflen, softT[i][j]);
+		}
 	}
 
 	return HANDS_BUFFER - buflen;

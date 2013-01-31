@@ -582,7 +582,7 @@ m_threadSupportCollision = new Win32ThreadSupport(Win32ThreadSupport::Win32Threa
 		for (int j=0;j<NUM_VERTS_Y;j++) 
 		{
 			float x = (i-center_trimesh.getX())*TRIANGLE_SIZE;
-			float y = (j-(120-center_trimesh.getY()))*TRIANGLE_SIZE;
+			float y = (j-(CAPTURE_SIZE.height/ARMM::ConstParams::WORLD_DIV-center_trimesh.getY()))*TRIANGLE_SIZE;
 			float height = m_rawHeightfieldData[j*NUM_VERTS_X+i];
 			m_vertices[i+j*NUM_VERTS_X].setValue(x, y, height);
 		}
@@ -1019,8 +1019,10 @@ void bt_ARMM_world::updateTrimeshRefitTree(float* hf) {
 
 	//btVector3 aabbMin(BT_LARGE_FLOAT,BT_LARGE_FLOAT,BT_LARGE_FLOAT);
 	//btVector3 aabbMax(-BT_LARGE_FLOAT,-BT_LARGE_FLOAT,-BT_LARGE_FLOAT);
-	for (int i=0;i<NUM_VERTS_X-1;i++) {
-		for (int j=0;j<NUM_VERTS_Y-1;j++) {	
+	for (int i=0;i<NUM_VERTS_X-1;i++) 
+	{
+		for (int j=0;j<NUM_VERTS_Y-1;j++) 
+		{	
 //			worldMax.setMax(m_vertices[i+j*NUM_VERTS_X]); worldMin.setMin(m_vertices[i+j*NUM_VERTS_X]);
 			float height = m_rawHeightfieldData[j*NUM_VERTS_X+i];
 			m_vertices[i+j*NUM_VERTS_X].setZ(height);					
@@ -1036,15 +1038,12 @@ void bt_ARMM_world::updateTrimeshRefitTree(float* hf) {
 void bt_ARMM_world::CalcGlobalValue(float * global_x, float * global_y, const int & hand_x, const int & hand_y)
 {
 	(*global_x) = (float) (hand_x - center_trimesh.x())*world_scale;
-	(*global_y) = (float) (hand_y - (120-center_trimesh.y()))*world_scale;
+	(*global_y) = (float) (hand_y - (ARMM::ConstParams::SKIN_Y/ARMM::ConstParams::WORLD_DIV -center_trimesh.y()))*world_scale;
 }
 
 void bt_ARMM_world::createHand(int hand_x, int hand_y, int sphere_resolution, float ratio) 
 {
-	float global_x, global_y;
-	CalcGlobalValue(&global_x, &global_y, hand_x, hand_y);
-
-	boost::shared_ptr<bt_ARMM_hand> tmpHand = boost::shared_ptr<bt_ARMM_hand>(new bt_ARMM_hand(m_dynamicsWorld, m_collisionShapes, world_scale, global_x, global_y, sphere_resolution, ratio, center_trimesh.x(), center_trimesh.y()));
+	boost::shared_ptr<bt_ARMM_hand> tmpHand = boost::shared_ptr<bt_ARMM_hand>(new bt_ARMM_hand(m_dynamicsWorld, m_collisionShapes, world_scale, 0, 0, sphere_resolution, ratio, center_trimesh.x(), center_trimesh.y()));
 	HandObjectsArray.push_back(tmpHand);
 	HandFingersArray.push_back(false);
 }
@@ -1052,8 +1051,8 @@ void bt_ARMM_world::createHand(int hand_x, int hand_y, int sphere_resolution, fl
 void bt_ARMM_world::updateHandDepth(int index, int hand_x, int hand_y, float curr_hands_ratio, float* depth_grid)
 {
 	float global_x, global_y;
-	CalcGlobalValue(&global_x, &global_y, hand_x, hand_y);
-	global_x = hand_x; global_y = hand_y;
+	//CalcGlobalValue(&global_x, &global_y, hand_x, hand_y);
+	global_x = hand_x; global_y = hand_y; //???
 	HandObjectsArray.at(index)->Update(global_x, global_y, curr_hands_ratio, depth_grid);
 
 	REP(idx,fingersIdx.size())
