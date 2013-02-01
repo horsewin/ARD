@@ -10,6 +10,8 @@
 
 namespace ARMM
 {
+	const int	ConstParams::MARKER_WIDTH = 400; //400mm=40cm
+
 	const char * ConstParams::DATABASEDIR = "C:/Users/Frontier2/Dropbox/Lab/ModelDatabase/";
 	const char * ConstParams::MENUDATADIR = "C:/Users/Frontier2/Dropbox/Lab/MenuDatabase/";
 

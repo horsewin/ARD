@@ -206,7 +206,9 @@ int KeyboardController::check_input(boost::shared_ptr<osg_Root> osgRoot, bt_ARMM
 
 			cvWrite(fc, "KinectTransform", kinectTransform);
 			cvReleaseFileStorage( &fc );
-			printf("Saved Kinect Transform for client\n");			
+			printf("Saved Kinect Transform for client\n");		
+
+			exit(EXIT_SUCCESS);
 		}
 	}
 	return 0;

@@ -8,6 +8,7 @@ namespace ARMM
 	class ConstParams
 	{
 	public:
+		static const int MARKER_WIDTH;
 
 		static const double	KINECT_PIX_PER_DEPTH;
 		static const int	WORLD_DIV;

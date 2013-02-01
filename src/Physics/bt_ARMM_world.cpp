@@ -678,7 +678,7 @@ void bt_ARMM_world::Update()
 	m_dynamicsWorld->stepSimulation(1/20.f,5); //60s
 
 	//m_dynamicsWorld->performDiscreteCollisionDetection();
-//	m_worldInfo.m_sparsesdf.GarbageCollect();
+	m_worldInfo.m_sparsesdf.GarbageCollect();
 }
 
 btScalar bt_ARMM_world::getDeltaTimeMicroseconds() 
@@ -696,7 +696,8 @@ float* bt_ARMM_world::getTrimeshGround() {
 	return m_rawHeightfieldData;
 }
 
-btTransform bt_ARMM_world::getTrimeshGroundTransform() {
+btTransform bt_ARMM_world::getTrimeshGroundTransform() 
+{
 	btTransform trans;
 	groundRigidBody->setRestitution(RESTITUTION);
 	groundRigidBody->getMotionState()->getWorldTransform(trans);

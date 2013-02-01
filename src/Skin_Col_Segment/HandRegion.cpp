@@ -158,9 +158,9 @@ void getConnectedComponents(IplImage *mask, int poly1_hull0, float perimScale, i
 // Code
 //---------------------------------------------------------------------------
 HandRegion::HandRegion(void)
-
 {
 	mImage = 0;
+	mKINECT_DEPTH_CM_PER_PIX = ARMM::ConstParams::MARKER_WIDTH / WORLD_SCALE;
 }
 
 HandRegion::~HandRegion(void)
@@ -404,7 +404,7 @@ int HandRegion::FindHands(IplImage *depthIm, IplImage *colourIm, IplImage *trans
 	    cvRectangle(transColor320, cvPoint(x1,y1) ,cvPoint(x2,y2),cvScalar(0,0,255));
 
 		//HACK TODO you should change this ratio depended on hand depth
-		curr_hands_ratio[0] = (float)FindNumHandPixels(0) / MIN_HAND_PIX;
+		curr_hands_ratio[0] = (float)FindNumHandPixels(center_depth[i]) / MIN_HAND_PIX;
 
 		curr_hands_corners[i].x /= skin_ratio;
 		curr_hands_corners[i].y /= skin_ratio;

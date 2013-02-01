@@ -59,10 +59,11 @@
 //---------------------------------------------------------------------------
 // Constant/Define
 //---------------------------------------------------------------------------
+#define SHOW_FPS_ON_WINDOW 1
 using namespace std; 
 using namespace xn;
 
-const int MAX_FPS = 100;
+const int MAX_FRAMES_SIZE = 100;
 
 //---------------------------------------------------------------------------
 // Global
@@ -205,19 +206,21 @@ namespace{
 		double current_time = static_cast<double>(cv::getTickCount());
 		time_spent += ( current_time - previous_time ) / cv::getTickFrequency();		
 		if( count_frame == 30){ // you can change the frame count if you want
-			if( fps.size() < MAX_FPS){
+			if( fps.size() < MAX_FRAMES_SIZE)
+			{
 				//fps.push_back(count_frame/time_spent);
 				fps.push_back(1000*time_spent/count_frame);
-			}else{
+			}
+			else
+			{
 				fps.pop_front();
 				fps.push_back(1000*time_spent/count_frame);
-				//fps.push_back(count_frame/time_spent);
 			}
 			count_frame = 0;	
 			time_spent = 0.0;		
 			double mean = cal_mean();
 			showFPS = 1000/mean;
-			//cout << "MEAN = " << mean << "ms  " << "SIGMA = " << cal_std(mean) << endl;
+			cout << "MEAN = " << mean << "ms  " << "SIGMA = " << cal_std(mean) << endl;
 			//cout <<  showFPS << "FPS" << endl;
 			previous_time = current_time;
 			return true;
@@ -358,8 +361,9 @@ int main(int argc, char* argv[])
 	while (running) 
 	{
     //start kinect
+#if SHOW_FPS_ON_WINDOW == 1
 		TickCountAverageBegin();
-
+#endif
 		if (XnStatus rc = niContext.WaitAnyUpdateAll() != XN_STATUS_OK) 
 		{
 			printf("Read failed: %s\n", xnGetStatusString(rc));
@@ -458,7 +462,9 @@ int main(int argc, char* argv[])
 
 #ifdef USE_ARMM_VRPN
 	//Send Car position+orientation			
+	//TickCountAverageBegin();
 	ARMM_server->mainloop();
+	//TickCountAverageEnd();
 #ifdef USE_ARMM_VRPN_RECEIVER
 	ARMM_sever_receiver->mainloop();
 #endif
@@ -483,7 +489,10 @@ int main(int argc, char* argv[])
 	//TickCountAverageBegin();
 	m_Connection->mainloop();
 
+#if SHOW_FPS_ON_WINDOW == 1
 	TickCountAverageEnd();
+#endif
+
 #endif
 
 		cvReleaseImage(&arImage);

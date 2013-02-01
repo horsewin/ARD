@@ -25,6 +25,8 @@ private:
 	std::vector <CvBox2D>	cont_boundbox2D; 
 	std::vector <CvPoint>	cont_center;
 
+	//
+	float	mKINECT_DEPTH_CM_PER_PIX;
 public:
     HandRegion(void);
     ~HandRegion(void);
