@@ -170,6 +170,10 @@ int KeyboardController::check_input(boost::shared_ptr<osg_Root> osgRoot, bt_ARMM
 		if (kinectTransform)
 		{
 			CvFileStorage *fs = cvOpenFileStorage(KINECT_TRANSFORM_FILENAME, 0, CV_STORAGE_WRITE);
+			if(fs == NULL)
+			{
+				cerr << "Error: No file storage is found -> " << KINECT_TRANSFORM_FILENAME << endl;
+			}
 			cvStartWriteStruct(fs, "MarkerSize", CV_NODE_MAP); 
 				cvWriteInt(fs, "width", markerSize.width);
 				cvWriteInt(fs, "height", markerSize.height);
@@ -185,11 +189,15 @@ int KeyboardController::check_input(boost::shared_ptr<osg_Root> osgRoot, bt_ARMM
 			cvWriteReal(fs, "MARKER_DEPTH", MARKER_DEPTH);
 
 			cvWrite(fs, "KinectTransform", kinectTransform);
-			cvReleaseFileStorage( &fs );
 			printf("Saved Kinect Transform\n");
+			cvReleaseFileStorage( &fs );
 
 			//for client
 			CvFileStorage *fc = cvOpenFileStorage(KINECT_CLIENT_TRANSFORM_FILENAME, 0, CV_STORAGE_WRITE);
+			if(fc == NULL)
+			{
+				cerr << "Error: No file storage is found -> " <<  KINECT_CLIENT_TRANSFORM_FILENAME << endl;
+			}
 			cvStartWriteStruct(fc, "MarkerSize", CV_NODE_MAP); 
 				cvWriteInt(fc, "width", markerSize.width);
 				cvWriteInt(fc, "height", markerSize.height);
@@ -205,8 +213,8 @@ int KeyboardController::check_input(boost::shared_ptr<osg_Root> osgRoot, bt_ARMM
 			cvWriteReal(fc, "MARKER_DEPTH", MARKER_DEPTH);
 
 			cvWrite(fc, "KinectTransform", kinectTransform);
-			cvReleaseFileStorage( &fc );
 			printf("Saved Kinect Transform for client\n");		
+			cvReleaseFileStorage( &fc );
 
 			exit(EXIT_SUCCESS);
 		}

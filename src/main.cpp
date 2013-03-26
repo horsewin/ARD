@@ -4,57 +4,47 @@
 // Includes
 //---------------------------------------------------------------------------
 #include "main.h"
+#include "UserConstant.h"
+#include "constant.h"
 #include <windows.h>
 #pragma comment(lib, "winmm.lib")
-
+//OpenNI
 #include <XnOS.h>
 #include <XnCppWrapper.h> 
-
 //OpenCV
 #include "opencv\cv.h"
 #include "opencv\highgui.h"
-
 //OPIRA
 #include "CaptureLibrary.h"
 #include "OPIRALibrary.h"
 #include "OPIRALibraryMT.h"
 #include "RegistrationAlgorithms/OCVSurf.h"
-
 //Bullet
 #include "Physics/bt_ARMM_world.h"
 #include "BulletCollision/CollisionShapes/btShapeHull.h"
- 
-//Graphics calls
+ //Graphics calls
 #include "Rendering\osg_Root.h"
 #include "Rendering\osg_Object.h"
 #include "ARMM\Rendering\osg_Menu.h"
 #include "Rendering\osg_geom_data.h"
-
-#include "leastsquaresquat.h"
-
 //Transforms
+#include "leastsquaresquat.h"
 #include "Transforms.h"
-
 //Controller Input
 #include "Controls/KeyboardControls.h"
 //#include "Controls/XBoxControls.h"
-
 //Network using VRPN
 #ifdef USE_ARMM_VRPN
 #include "Network\Communicator.h"
 #endif
-
+//hand segmentation
 #ifdef USE_SKIN_SEGMENTATION
 #include "Skin_Col_Segment/HandRegion.h"
 #include "Skin_Col_Segment/FlowCapture.h"
 #endif
-
 //STL
 #include <deque>
 #include <assert.h>
-
-#include "UserConstant.h"
-#include "constant.h"
 
 //---------------------------------------------------------------------------
 // Constant/Define
@@ -145,7 +135,6 @@ double time_spent    = 0.0;
 double showFPS = 0.0;
 /////////////////////
 
-
 //---------------------------------------------------------------------------
 //Prototype
 //---------------------------------------------------------------------------
@@ -158,23 +147,6 @@ void TransformImage(IplImage* depthIm, IplImage* ResDepth, float markerDepth, Cv
 
 //reflesh all scene
 void RenderScene(IplImage *arImage, Capture *capture);
-
-//for Bullet and OSG params
-void setWorldOrigin();
-
-//for virtual hands
-int	 CreateHand(int lower_left_corn_X, int lower_left_corn_Y) ;
-void UpdateAllHands();
-
-//for OSG menu
-void AssignPhysics2Osgmenu();
-void ResetTextureTransferMode();
-void ExecuteAction(const int & val);
-void CheckerArInput();
-int	 CheckerArModelButtonType(const int & v);
-
-double cal_mean();
-double cal_std(double mean);
 
 namespace{
 	double cal_mean() {
@@ -220,8 +192,7 @@ namespace{
 			time_spent = 0.0;		
 			double mean = cal_mean();
 			showFPS = 1000/mean;
-			cout << "MEAN = " << mean << "ms  " << "SIGMA = " << cal_std(mean) << endl;
-			//cout <<  showFPS << "FPS" << endl;
+			//cout << "MEAN = " << mean << "ms  " << "SIGMA = " << cal_std(mean) << endl;
 			previous_time = current_time;
 			return true;
 		}
@@ -263,7 +234,8 @@ void VRPN_CALLBACK handle_object (void * userData, const vrpn_TRACKERCB t)
 int main(int argc, char* argv[]) 
 {
 	depthmask_for_mesh = cvCreateImage(MESH_SIZE, IPL_DEPTH_8U, 1);
-	markerSize.width = -1;  markerSize.height = -1;
+	markerSize.width = -1;  
+	markerSize.height = -1;
 
 	//init OpenNI
 	EnumerationErrors errors;
@@ -421,7 +393,9 @@ int main(int argc, char* argv[])
 #endif
 
 				counter = 0;
-			} else {
+			} 
+			else 
+			{
 #ifdef USE_SKIN_SEGMENTATION /*Skin color segmentation*/ // may be reduce resolution first as well as cut off depth make processing faster
 				// (2)Sphere representation
 				//----->Transform both depth and color
@@ -754,7 +728,8 @@ void inpaintDepth(DepthMetaData *niDepthMD, bool halfSize)
 	IplImage *depthIm16 = cvCreateImage(cvGetSize(depthIm), IPL_DEPTH_16U, 1);
 	cvConvertScale(depthPaint, depthIm16, 1/scale, min);
 
-	if (halfSize) {
+	if (halfSize) 
+	{
 		IplImage *depthPaintedFull = cvCreateImage(cvGetSize(depthImFull), IPL_DEPTH_16U, 1);
 		cvResize(depthIm16, depthPaintedFull,0);
 		IplImage *depthImMaskFull = cvCreateImage(cvGetSize(depthImFull), IPL_DEPTH_8U, 1);
@@ -763,7 +738,9 @@ void inpaintDepth(DepthMetaData *niDepthMD, bool halfSize)
 		cvCopy(depthPaintedFull, depthImFull, depthImMaskFull);
 		cvReleaseImage(&depthPaintedFull); cvReleaseImage(&depthImMaskFull);
 		cvReleaseImage(&depthImFull);
-	} else {
+	} 
+	else 
+	{
 		cvCopy(depthIm16, depthIm, depthImMask);
 	}
 
@@ -781,7 +758,7 @@ void setWorldOrigin()
 	m_world->set_center_trimesh(WORLD_ORIGIN_X,WORLD_ORIGIN_Y);
 }
 
-void registerMarker() 
+void RegisterMarker() 
 {
 	if (calcKinectOpenGLTransform(colourIm, depthIm, &kinectTransform)) 
 	{
@@ -980,7 +957,7 @@ void ExecuteAction(const int & val)
 {
 	if(val == VK_SPACE)
 	{
-		registerMarker();
+		RegisterMarker();
 	}
 }
 

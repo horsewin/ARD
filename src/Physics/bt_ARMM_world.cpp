@@ -114,6 +114,7 @@ btVector3	pCollision;  //coordinate with a collided object
 btVector3 pColLocalOnObj;
 int		selector = 0;
 interaction interact_state = INIT;
+bool  bFingerPinchState = false;
 bool	touch; //(true)touch  (false)not touch
 
 btCollisionObject * actualCollisionObject = NULL; //for collision detection
@@ -1259,7 +1260,8 @@ void bt_ARMM_world::DecideCollisionCondition()
 					PlaySound(_T("Crrect_answer3.wav"), NULL, SND_ASYNC);	
 
 			}
-			else if(interact_state == PINCH)
+			//PINCH判定状態かつ指先の位置からPINCHが認識されている際->True
+			else if(interact_state == PINCH && bFingerPinchState)
 			{
 				//2回目の接触 <sourceオブジェクト決定>
 				if( i == collisionInd)

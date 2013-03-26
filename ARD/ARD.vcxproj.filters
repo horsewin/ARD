@@ -72,9 +72,6 @@
     <ClCompile Include="..\src\MyShadowMap.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Controls\ARControls.cpp">
-      <Filter>Controls</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\Rendering\osg_geom_data.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
@@ -139,9 +136,6 @@
     </ClInclude>
     <ClInclude Include="..\src\include\leastsquaresquat.h">
       <Filter>Transforms</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\include\Controls\ARControls.h">
-      <Filter>Controls</Filter>
     </ClInclude>
     <ClInclude Include="..\src\include\Rendering\osg_Update.h">
       <Filter>Rendering</Filter>

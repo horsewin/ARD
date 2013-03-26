@@ -83,7 +83,6 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\Dropbox\Lab\ShareProc\ARMM\Rendering\osg_Menu.cpp" />
     <ClCompile Include="..\src\constant.cpp" />
-    <ClCompile Include="..\src\Controls\ARControls.cpp" />
     <ClCompile Include="..\src\Controls\KeyboardControls.cpp" />
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\MyShadowMap.cpp" />
@@ -101,7 +100,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\include\constant.h" />
-    <ClInclude Include="..\src\include\Controls\ARControls.h" />
     <ClInclude Include="..\src\include\Controls\Controls.h" />
     <ClInclude Include="..\src\include\Controls\KeyboardControls.h" />
     <ClInclude Include="..\src\include\leastsquaresquat.h" />

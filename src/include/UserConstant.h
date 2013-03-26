@@ -58,7 +58,7 @@ enum{HAND_SIZE		= HAND_GRID_SIZE};
 #define KINECT_PARAMS_FILENAME		"Data/Cameras/kinect.yml"
 #define KINECT_TRANSFORM_FILENAME	"Data/Cameras/KinectTransform.yml"
 #define KINECT_CONFIG_FILENAME		"Data/Cameras/KinectConfig.xml"
-#define KINECT_CLIENT_TRANSFORM_FILENAME "C:/Users/Frontier2/Dropbox/Lab/M2/proc/Cameras/KinectTransform.yml"
+#define KINECT_CLIENT_TRANSFORM_FILENAME "C:/Users/Frontier2/Dropbox/Lab/M2/prog/Cameras/KinectTransform.yml"
 
 //for VRPN connection
 enum{UDP_LIMITATION = MIN_HAND_PIX*MIN_HAND_PIX};

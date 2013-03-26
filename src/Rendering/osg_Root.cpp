@@ -33,6 +33,7 @@ const osg::Quat DEFAULTATTIDUTE =
 // Global
 //---------------------------------------------------------------------------
 vector<int> fingersIdx;
+vector<float*> fingersPos;
 vector<int> fingerIndex;
 float TrimeshScale;
 
